@@ -4,7 +4,7 @@ pushd "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliar
 call vcvarsall x86
 popd
 
-set compilerFlags=-MTd -Gm- -nologo -Oi -GR- -EHsc -EHa- -W3 -DKFIGHTER_SLOW=1 -DKFIGHTER_INTERNAL=0 -DKFIGHTER_WIN32=1 -FC -Z7
+set compilerFlags=-MTd -Gm- -nologo -Oi -GR- -EHsc -EHa- -W3 -DKFIGHTER_SLOW=1 -DKFIGHTER_INTERNAL=1 -DKFIGHTER_WIN32=1 -FC -Z7
 set linkerFlags=-incremental:no user32.lib gdi32.lib winmm.lib
 
 IF NOT EXIST ..\build mkdir ..\build

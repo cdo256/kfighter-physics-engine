@@ -1,6 +1,6 @@
 # KFighter physics engine
 
-![KFigher screenshot](https://github.com/cdo256/kfighter-physics-engine/tree/master/kfighter/media/screenshot1.png)
+![KFigher screenshot](https://github.com/cdo256/kfighter-physics-engine/tree/master/kfighter/media/screenshot1.png "KFigher screenshot")
 
 The rigid-body physics engine for the unfinished game 'KFighter'.
 

@@ -1,0 +1,58 @@
+TAB Toggle auto-complete
+
+ALT-B       Switch buffer (curr win)
+ALT-SHIFT-B Switch buffer (other win)
+
+ALT-F       Find file
+ALT-SHIFT-F Find file (other win)
+
+ALT-S       Save file
+ALT-M       Runs build.bat
+ALT-R       Revert buffer
+
+ALT-W       Swap windows
+
+ALT-SPACE   Sets mark
+CTRL-TAB    Reindent block
+CTRL-Q      Copies block
+CTRL-F      Pastes block
+CTRL-W      Cuts block
+ALT-SHIFT-; Pops back to previous mark
+
+ALT-U       Undo
+
+ALT-J       Jump to function definition
+
+CTRL-S      Incremental search
+  CTRL-S    Next occurrence
+  CTRL-R    Prev occurrence
+
+ALT-O       Query replace
+  y         Replace occurrence
+  n         Skip occurrence
+
+ALT-L       Replace inside block
+
+ALT-[       Begin recording macro
+ALT-]       End recording macro
+ALT-'       Replay macro
+
+ALT-.       Reflow comment
+
+CTRL-O      Insert line above
+CTRL-ALT-O  Insert line below
+
+ALT-N       Go to the next error
+ALT-SHIFT-N Go to the prev error
+
+ALT-G       Go to line number
+
+ALT-E       Go to next statement
+ALT-A       Go to prev statement
+
+CTRL-ALT-E  Move to next func def
+CTRL-ALT-A  Move to prev func def
+CTRL-ALT-H  Put region around function def
+
+CTRL-K      Kill line
+ALT-D       Kill next word

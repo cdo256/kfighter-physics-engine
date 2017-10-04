@@ -58,6 +58,8 @@ struct Win32State {
     int inputPlaybackPosition;
     int inputBufferSize;
     GameInput inputBuffer[win32InputBufferMaxSize];
+
+    u32 randomSeed;
     
     void* gameMemoryBlock;
     void* gameMemoryTempBlock;
@@ -345,7 +347,8 @@ win32MainWindowCallback(
 }
 
 internal void win32ProcessKeyboardMessage(GameButtonState* state, b32 isDown) {
-    assert(state->endedDown != isDown);
+    //TODO: This keeps triggering when exiting the window
+    //assert(state->endedDown != isDown);
     state->endedDown = isDown;
     state->halfTransitionCount++;
 }
@@ -403,15 +406,22 @@ void win32ProcessPendingMessages(Win32State* state, GameControllerInput* keyboar
                                 if (state->recordingInput) {
                                     win32EndRecordingInput(state);
                                     win32BeginInputPlayback(state);
+                                    OutputDebugStringA("Ending input recording\n");
+                                    OutputDebugStringA("Beginning input playback\n");
                                 } else if (state->playingInput) {
                                     win32EndInputPlayback(state);
+                                    OutputDebugStringA("Ending input playback\n");
                                 } else {
                                     win32BeginRecordingInput(state);
+                                    OutputDebugStringA("Beginning input recording\n");
                                 }
                             }
                         } break;
                         case 'R': {
                             if (wasDown) {
+                                char buffer[256];
+                                wsprintf(buffer, "Seed: %d\n",state->randomSeed);
+                                OutputDebugStringA(buffer);
 #if 0
                                 //TODO: Wy doesn't this work
                                 ZeroMemory(
@@ -422,7 +432,29 @@ void win32ProcessPendingMessages(Win32State* state, GameControllerInput* keyboar
                                     ((u64*)state->gameMemoryBlock)[i] = 0;
 #endif
                             }
-                        }
+                        } break;
+                        case VK_OEM_4: { // "["
+                            if (wasDown) {
+                                state->randomSeed--;
+                                char buffer[256];
+                                wsprintf(buffer, "Seed: %d\n",state->randomSeed);
+                                OutputDebugStringA(buffer);
+
+                                for (u64 i = 0; i < state->gameMemorySize/8; i++)
+                                    ((u64*)state->gameMemoryBlock)[i] = 0;
+                            }
+                        } break;
+                        case VK_OEM_6: { // "]"
+                            if (wasDown) {
+                                state->randomSeed++;
+                                char buffer[256];
+                                wsprintf(buffer, "Seed: %d\n",state->randomSeed);
+                                OutputDebugStringA(buffer);
+                                
+                                for (u64 i = 0; i < state->gameMemorySize/8; i++)
+                                    ((u64*)state->gameMemoryBlock)[i] = 0;
+                            } 
+                        } break;
 #endif
                     }
                 }
@@ -447,6 +479,16 @@ inline f32 win32GetSecondsElapsedSince(u64 start) {
     u64 countsElapsed = end - start;
     f32 secondsElapsed = (f32)countsElapsed / (f32)performanceFrequency;
     return secondsElapsed;
+}
+
+internal void win32ProcessXInputDigitalButton(
+    DWORD xinputButtonState,
+    GameButtonState* oldState,
+    DWORD buttonBit,
+    GameButtonState* newState) {
+
+    newState->endedDown = ((xinputButtonState & buttonBit) == buttonBit);
+    newState->halfTransitionCount = (oldState->endedDown != newState->endedDown) ? 1 : 0;
 }
 
 int CALLBACK WinMain(
@@ -477,6 +519,7 @@ int CALLBACK WinMain(
 #endif
 
     Win32State state = {};
+    state.randomSeed = initialSeed;
 
     GameMemory memory = {};
     memory.permanentStorageSize = MEGABYTES(4);
@@ -593,26 +636,102 @@ int CALLBACK WinMain(
                             //TODO: See if the dwPacketNumber increments too fast
                             XINPUT_GAMEPAD* gamepad = &controllerState.Gamepad;
 
-                            b32 dpadUp = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
-                            b32 dpadDown = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
-                            b32 dpadLeft = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
-                            b32 dpadRight = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
                             b32 start = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_START);
                             b32 back = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_BACK);
                             b32 leftShoulder = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
                             b32 rightShoulder = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
-                            b32 aButton = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_A);
-                            b32 bButton = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_B);
-                            b32 xButton = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_X);
-                            b32 yButton = (b32)(gamepad->wButtons & XINPUT_GAMEPAD_Y);
+                            
+                            s16 lStickX = gamepad->sThumbLX;
+                            s16 lStickY = gamepad->sThumbLY;
+                            s16 rStickX = gamepad->sThumbRX;
+                            s16 rStickY = gamepad->sThumbRY;
 
-                            u16 lStickX = gamepad->sThumbLX;
-                            u16 lStickY = gamepad->sThumbLY;
-                            u16 rStickX = gamepad->sThumbRX;
-                            u16 rStickY = gamepad->sThumbRY;
+                            newController->isAnalog = true;
+                            newController->lStick.startX = oldController->lStick.endX;
+                            newController->lStick.startY = oldController->lStick.endY;
+                            newController->rStick.startX = oldController->rStick.endX;
+                            newController->rStick.startY = oldController->rStick.endY;
 
+                            newController->lStick.endX = (f32)lStickX / 32768.f;
+                            newController->lStick.endY = (f32)lStickY / 32768.f;
+                            newController->rStick.endX = (f32)rStickX / 32768.f;
+                            newController->rStick.endY = (f32)rStickY / 32768.f;
+                            newController->lStick.maxX = newController->lStick.minX
+                                = newController->lStick.endX;
+                            newController->lStick.maxY = newController->lStick.minY
+                                = newController->lStick.endY;
+                            newController->rStick.maxX = newController->rStick.minX
+                                = newController->rStick.endX;
+                            newController->rStick.maxY = newController->rStick.minY
+                                = newController->rStick.endY;
+
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->up,
+                                XINPUT_GAMEPAD_DPAD_UP,
+                                &newController->up);
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->down,
+                                XINPUT_GAMEPAD_DPAD_DOWN,
+                                &newController->down);                            
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->left,
+                                XINPUT_GAMEPAD_DPAD_LEFT,
+                                &newController->left);
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->right,
+                                XINPUT_GAMEPAD_DPAD_RIGHT,
+                                &newController->right);
+
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->aButton,
+                                XINPUT_GAMEPAD_A,
+                                &newController->aButton);
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->bButton,
+                                XINPUT_GAMEPAD_B,
+                                &newController->bButton);                            
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->xButton,
+                                XINPUT_GAMEPAD_X,
+                                &newController->xButton);
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->yButton,
+                                XINPUT_GAMEPAD_Y,
+                                &newController->yButton);
+
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->start,
+                                XINPUT_GAMEPAD_START,
+                                &newController->start);
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->back,
+                                XINPUT_GAMEPAD_BACK,
+                                &newController->back);
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->lShoulder,
+                                XINPUT_GAMEPAD_LEFT_SHOULDER,
+                                &newController->lShoulder);
+                            win32ProcessXInputDigitalButton(
+                                gamepad->wButtons,
+                                &oldController->rShoulder,
+                                XINPUT_GAMEPAD_RIGHT_SHOULDER,
+                                &newController->rShoulder);
+                            
                             u8 leftTrigger = gamepad->bLeftTrigger;
                             u8 rightTrigger = gamepad->bRightTrigger;
+
+                            //newController->up = dpadUp;
                         } else {
                             //NOTE: This controller is unavailable
                         }
@@ -639,6 +758,7 @@ int CALLBACK WinMain(
                 if (dt > 0.1f) dt = 0.1f; // cap time jumps to prevent buggy physics
                 gameCode.updateAndRender(
                     dt,
+                    state.randomSeed,
                     &memory,
                     input,
                     &buffer);

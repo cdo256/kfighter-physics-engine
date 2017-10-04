@@ -24,68 +24,10 @@
 #define local_persist static
 #define global static
 
-#define KILOBYTES(x) ((x)*1024LL)
-#define MEGABYTES(x) (KILOBYTES(x)*1024LL)
-#define GIGABYTES(x) (MEGABYTES(x)*1024LL)
+#include "kfighter_maths.h"
+#include "kfighter_physics.h"
 
-#define min(x,y) ((x)<(y)?(x):(y))
-#define max(x,y) ((x)>(y)?(x):(y))
-#define bound(x,lower,upper) (max((lower),min((upper),(x))))
-
-#include <stdint.h>
-
-typedef int8_t s8;
-typedef int16_t s16;
-typedef int32_t s32;
-typedef int64_t s64;
-
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-typedef s8 b8;
-typedef s16 b16;
-typedef s32 b32;
-typedef s64 b64;
-
-typedef float f32;
-typedef double f64;
-
-global const f32 epsilon = 0.000001f;
-global const f32 pi = 3.14152635389793238f;
-
-inline f32 sqr(f32 x);
-
-struct v2 {
-    f32 x, y;
-};
-
-inline v2 V2(f32 x, f32 y);
-
-inline v2 operator+(v2 vec);
-inline v2 operator-(v2 vec);
-inline v2 operator+(v2 lhs, v2 rhs);
-inline v2 operator-(v2 lhs, v2 rhs);
-inline v2 operator*(f32 scalar, v2 vec);
-inline v2 operator*(v2 vec, f32 scalar);
-inline v2 operator/(v2 vec, f32 scalar);
-
-inline v2 &operator+=(v2 &lhs, v2 rhs);
-inline v2 &operator-=(v2 &lhs, v2 rhs);
-inline v2 &operator*=(v2 &lhs, f32 scalar);
-inline v2 &operator/=(v2 &lhs, f32 scalar);
-
-inline bool operator==(v2 lhs, v2 rhs);
-inline bool operator!=(v2 lhs, v2 rhs);
-
-inline f32 sqrmag(v2 vec);
-inline f32 mag(v2 vec);
-inline v2 norm(v2 vec);
-inline v2 perp(v2 vec); // = rotate(vec,pi/2)
-inline f32 dot(v2 vec1, v2 vec2);
-inline f32 cross(v2 vec1, v2 vec2);
-inline v2 rotate(v2 vec, f32 angle);
+global const u32 initialSeed = 0;
 
 struct GameOffscreenBuffer {
     void* bitmapMemory;
@@ -148,10 +90,10 @@ struct GameMemory {
     void* transientStorage;
 };
 
-
 #define GAME_UPDATE_AND_RENDER(name) \
     void name(                       \
         f32 dt,                      \
+        u32 seed,                    \
         GameMemory* memory,          \
         GameInput* input,            \
         GameOffscreenBuffer* buffer)
@@ -162,79 +104,19 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRenderStub) {}
 
 GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
 
-
 //NOTE: Platform independent declarations
 
 #define arrayCount(array) (sizeof(array) / sizeof((array)[0]))
 
-global const int maxVerticesInPolygon = 16;
-
-struct Polygon {
-    int count;
-    v2 center;
-    v2 verts[maxVerticesInPolygon];
-};
-
-struct CollisionInfo {
-    v2 pos;
-    v2 normal;
-    f32 depth;
-};
-
-struct PhysicsParticle {
-    v2 p;
-    v2 v;
-    f32 mass;
-};
-
-struct PhysicsRect {
-    f32 w, h;
-    v2 p;
-    v2 v;
-    f32 angle;
-    f32 angularVel;
-    f32 mass;
-    f32 momentOfInertia;
-    bool fixed;
-
-    u32 colour;
-    //int jointCount;
-    //PhysicsJoint joints[4];
-};
-
-struct CollisionManifold {
-    int count;
-    v2 pos[2];
-    v2 normal;
-    f32 depth;
-    PhysicsRect *r1, *r2;
-};
-
-struct PhysicsJoint {
-    PhysicsRect* r1;
-    PhysicsRect* r2;
-    v2 relPos1, relPos2;
-    f32 minTheta, maxTheta;
-
-    bool enable;
-};
-
-struct PhysicsPlayer {
-    f32 w, h;
-    v2 p;
-    v2 v;
-    f32 angle;
-    f32 angularVel;
-    f32 mass;
-    f32 momentOfInertia;
-};
+global const int playerSegmentCount = 11;
+global const int playerJointCount = 10;
 
 union PlayerSegments {
-    PhysicsRect segments[11];
+    PhysicsRect segments[playerSegmentCount];
     struct {
         PhysicsRect head;
         PhysicsRect chest;
-        PhysicsRect abdomin;
+        PhysicsRect abdomen;
         PhysicsRect lBicep;
         PhysicsRect lForearm;
         PhysicsRect rBicep;
@@ -246,46 +128,107 @@ union PlayerSegments {
     };
 };
 
-struct PlayerBody {
-    PlayerSegments* segments;
+union PlayerJoints {
+    PhysicsJoint joints[playerJointCount];
+    struct {
+        PhysicsJoint neck;
+        PhysicsJoint back;
+        PhysicsJoint lShoulder;
+        PhysicsJoint lElbow;
+        PhysicsJoint rShoulder;
+        PhysicsJoint rElbow;
+        PhysicsJoint lHip;
+        PhysicsJoint lKnee;
+        PhysicsJoint rHip;
+        PhysicsJoint rKnee;
+    };
 };
 
-global const int maxParticles = 10000;
+struct PoseJoint {
+    f32 angle;
+    f32 applicationFactor; // 1 is apply fully, 0 is don't apply (used in interpolation)
+};
+
+struct PlayerPose {
+    union {
+        PoseJoint joints[playerJointCount];
+        struct {
+            PoseJoint neck;
+            PoseJoint back;
+            PoseJoint lShoulder;
+            PoseJoint lElbow;
+            PoseJoint rShoulder;
+            PoseJoint rElbow;
+            PoseJoint lHip;
+            PoseJoint lKnee;
+            PoseJoint rHip;
+            PoseJoint rKnee;
+        };
+    };
+};
+
+
+enum Direction {DIRECTION_LEFT, DIRECTION_RIGHT};
+
+struct Player {
+    PlayerSegments* segments;
+    PlayerJoints* joints;
+    PlayerPose* currentPose;
+
+    PhysicsRect* playerRect;
+    
+    PlayerPose *prevPose, *nextPose;
+    f32 strideWheelRadius;
+    f32 strideWheelAngle;
+    //bool running;
+    
+    bool lPunching, rPunching;
+    f32 rPunchTimer, lPunchTimer;
+    v2 lPunchTarget, rPunchTarget;
+    
+    f32 torque;
+    
+    Direction direction;
+};
+
 global const int maxRects = 100;
-global const int maxPlayers = 4;
 global const int maxJoints = 50;
 global const int maxCollsionManifolds = 100;
+global const int maxCollisionIslands = 20;
+global const int maxPoses = 20;
+global const int maxPlayers = 4;
 
 struct GameState {
     b32 isInitialised;
-    s32 offsetX;
-    s32 offsetY;
-
-    int playerX, playerY;
-
-    PlayerBody playerBody;
-
-    int particleCount;
-    PhysicsParticle particles[maxParticles];
     
+    int playerCount;
+    Player players[maxPlayers];
+
+    int poseCount;
+    PlayerPose poses[maxPoses];
+    PlayerPose* defaultPose;
+    PlayerPose* ballPose;
+    PlayerPose* readyPose;
+    PlayerPose* punchPrepPose;
+    PlayerPose* punchExtendPose;
+    
+    PlayerPose* runningLPassPose;
+    PlayerPose* runningLReachPose;
+    PlayerPose* runningRPassPose;
+    PlayerPose* runningRReachPose;    
+    PlayerPose* walkingLPassPose;
+    PlayerPose* walkingLReachPose;
+    PlayerPose* walkingRPassPose;
+    PlayerPose* walkingRReachPose;
+
     int rectCount;
     PhysicsRect rects[maxRects];
 
-    //NOTE: Rects are stored in this order
-    int fixedRectCount;
-    int stringSegmentRectCount;
-    int playerSegmentRectCount;
-    int freeRectCount;
-
-    int playerCount;
-    PhysicsPlayer players[maxPlayers];
+    int collisionIslandCount;
+    CollisionIsland collisionIslands[maxCollisionIslands];
 
     int jointCount;
     PhysicsJoint joints[maxJoints];
-
-    //NOTE: Segments are stored in this order
-    int stringJointCount;
-    int playerJointCount;
     
     v2 globalForce;
     v2 globalAccel;
@@ -293,13 +236,25 @@ struct GameState {
     v2 globalVel;
     v2 globalPos;
 
-    bool collision;
-    bool debugPause;
-    bool stringEnable; //hang string from top of screen
-
     //TODO: Use these
     int collisionManifoldCount;
     CollisionManifold collisionManifolds[maxCollsionManifolds];
+    
+    //TODO: Is this random enough?
+    u32 randomSeed;
+    bool enableJoints;
+    bool enableCollision;
+    bool enableFriction;
+    bool enableMotor;
+    bool enablePIDJoints;
+    bool enableRotationalConstraints;
+    f32 frictionCoef;
+    f32 jointPositionalBiasCoef;
+
+    f32 maxMotorTorque;
+    f32 motorTargetAngVel;
+
+    u32 backgroundColour;
 };
 
 #if KFIGHTER_SLOW

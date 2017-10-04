@@ -4,7 +4,9 @@
 
 The rigid-body physics engine for the unfinished game 'KFighter'.
 
-It's written from scratch in C++ but it may as well be in C since it uses so few of C++ features. It's currently Windows only but it's designed to be extended to other platforms in the future. 
+## About
+
+It's written from scratch in C++ but it may as well be in C since it uses so few of C++ features. It's currently Windows only but it's designed to be extended to other platforms in the future. I started it by following [a tutorial](https://handmadehero.org/) by the brilliant [Casey Muratori](https://mollyrocket.com/casey/about.html). The physics engine is based off talks done by [Erin Catto](https://github.com/erincatto) of [Box2D](http://box2d.org/) fame and works by iteratively solving a set of constraints.
 
 ## Features
 

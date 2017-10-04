@@ -1,6 +1,6 @@
 # KFighter physics engine
 
-![KFigher screenshot](https://github.com/cdo256/kfighter-physics-engine/kfighter/media/screenshot1.png)
+![KFigher screenshot](https://github.com/cdo256/kfighter-physics-engine/tree/master/kfighter/media/screenshot1.png)
 
 The rigid-body physics engine for the unfinished game 'KFighter'.
 
@@ -39,11 +39,11 @@ It's written from scratch in C++ but it may as well be in C since it uses so few
 
 ## Directories
 
-- [`kfighter\build`](https://github.com/cdo256/kfighter-physics-engine/kfighter/build) - The directory for VC's output
-- [`kfighter\code`](https://github.com/cdo256/kfighter-physics-engine/kfighter/code) - The main code directory, all the compiled code is in here
-- [`kfighter\media`](https://github.com/cdo256/kfighter-physics-engine/kfighter/media) - Images for marketing
-- [`kfighter\misc`](https://github.com/cdo256/kfighter-physics-engine/kfighter/misc) - Editor tools and config files
-- [`kfighter\reference`](https://github.com/cdo256/kfighter-physics-engine/kfighter/reference) - Links to useful resources
+- [`kfighter\build`](https://github.com/cdo256/kfighter-physics-engine/tree/master/kfighter/build) - The directory for VC's output
+- [`kfighter\code`](https://github.com/cdo256/kfighter-physics-engine/tree/master/kfighter/code) - The main code directory, all the compiled code is in here
+- [`kfighter\media`](https://github.com/cdo256/kfighter-physics-engine/tree/master/kfighter/media) - Images for marketing
+- [`kfighter\misc`](https://github.com/cdo256/kfighter-physics-engine/tree/master/kfighter/misc) - Editor tools and config files
+- [`kfighter\reference`](https://github.com/cdo256/kfighter-physics-engine/tree/master/kfighter/reference) - Links to useful resources
 
 ## How to build
 

@@ -263,6 +263,8 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
         }
         
         f32 thetaDiff = bound(theta,j->minTheta,j->maxTheta) - theta;
+
+		//NOTE: Debug code, but shouldn't make a difference if left in
 		if (thetaDiff > 1.f)
 			normAngle(theta);
 

@@ -17,12 +17,15 @@ internal void makePlayer(GameState* state, Player* pl, GameOffscreenBuffer* buff
     
     pl->segments = (PlayerSegments*)ci->rects;
     PhysicsRect* r;
+    f32 margin = 50;
+    f32 pX = rand(state)*(buffer->width-2*margin) + margin;
+    f32 pY = rand(state)*(buffer->height-2*margin) + margin;
     for (int i = 0; i < ci->count; i++) {
         r = &state->rects[state->rectCount++];
         r->fixed = false;
         r->enableFriction = true;
-        r->p.x = rand(state)*buffer->width;
-        r->p.y = rand(state)*buffer->height;
+        r->p.x = pX + (rand(state)-.5f)*50;
+        r->p.x = pY + (rand(state)-.5f)*50;
         r->v.x = (rand(state)-0.5f)*20.f;
         r->v.y = (rand(state)-0.5f)*20.f;
         r->lastV = r->v;
@@ -91,7 +94,7 @@ internal void makePlayer(GameState* state, Player* pl, GameOffscreenBuffer* buff
         j->enable = true;                                        \
     }
 
-#if 1 // Debug constraints
+#if 0 // Debug constraints
     MAKE_JOINT(neck,      head,    chest,    -0.30f, 0.40f, 5.f/3.f);
     MAKE_JOINT(back,      chest,   abdomen,  -0.00f, 0.00f, 1.f);
     MAKE_JOINT(lShoulder, chest,   lBicep,   -0.70f, 0.90f, -0.0f);

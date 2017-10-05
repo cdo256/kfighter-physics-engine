@@ -1,6 +1,6 @@
 # KFighter physics engine
 
-![KFighter screenshot](https://github.com/cdo256/kfighter-physics-engine/raw/master/kfighter/media/screenshot2.png "KFighter screenshot")
+![KFighter screenshot](https://github.com/cdo256/kfighter-physics-engine/raw/master/kfighter/media/screenshot4.png "KFighter screenshot")
 
 The rigid-body physics engine for the unfinished game 'KFighter'.
 
@@ -21,6 +21,7 @@ It's written from scratch in C++ but it may as well be in C since it uses so few
   - Joint friction
   - PID controlled motors
 - Loop live code editing
+- Pose matching
 
 ## Controls
 

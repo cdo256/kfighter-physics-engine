@@ -10,6 +10,7 @@
 # Precompiled Headers
 *.gch
 *.pch
+*.ipch
 
 # Compiled Dynamic libraries
 *.so
@@ -33,3 +34,6 @@
 # Debug files
 *.pdb
 *.map
+
+# VC database files
+*.VC.*

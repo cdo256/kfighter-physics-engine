@@ -1,4 +1,4 @@
-REM @echo off
+@echo off
 
 pushd "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\"
 call vcvarsall x86

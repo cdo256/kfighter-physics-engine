@@ -145,10 +145,10 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
     f32 theta = r1->angle - r2->angle;
     theta = normAngle(theta);
     f32 angVel = r1->angularVel - r2->angularVel;
+    f32 effectiveMass = -1.f / (1.f/r1->momentOfInertia + 1.f/r2->momentOfInertia);
     
     // --- MOTOR ---
     if (state->enableMotor && j->enableMotor) {
-        f32 effectiveMass = -1.f / (1.f/r1->momentOfInertia + 1.f/r2->momentOfInertia);
         f32 targetAngVel = j->targetAngVel;
         f32 angImpulse = effectiveMass
             * (angVel - targetAngVel);
@@ -181,22 +181,16 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
     }
 
     // --- JOINT FRICTION ---
-    f32 effectiveMomentOfInertia = -1.f / (1.f/r1->momentOfInertia + 1.f/r2->momentOfInertia);
+    f32 effectiveMomentOfInertia = -1.f /
+        (1.f/r1->momentOfInertia + 1.f/r2->momentOfInertia);
     f32 angImpulse = effectiveMomentOfInertia * angVel;
 
-    f32 frictionCoef = 1.f;
-    if (!r1->fixed) r1->angularVel += frictionCoef * angImpulse / r1->momentOfInertia;
-    if (!r2->fixed) r2->angularVel -= frictionCoef * angImpulse / r2->momentOfInertia;
-    
-    // --- ROTATION RESOLUTION ---
-    if (state->enableRotationalConstraints) {
-        if ((theta < j->minTheta && angVel < 0) ||
-            (theta > j->maxTheta && angVel > 0)) {
-                    
-            if (!r1->fixed) r1->angularVel += angImpulse / r1->momentOfInertia;
-            if (!r2->fixed) r2->angularVel -= angImpulse / r2->momentOfInertia;
-        }
-    }
+    if (!r1->fixed)
+        r1->angularVel +=
+            state->jointFrictionCoef * angImpulse / r1->momentOfInertia;
+    if (!r2->fixed)
+        r2->angularVel -=
+            state->jointFrictionCoef * angImpulse / r2->momentOfInertia;
     
     // --- VELOCITY RESOLUTION ---
     v2 rel1 = rotate(j->relPos1, r1->angle);
@@ -229,14 +223,14 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
         + sqr(jacobiAngle1) / r1->momentOfInertia
         + sqr(jacobiAngle2) / r2->momentOfInertia;
        
-    f32 effectiveMass = (linearThingy + rotationalThingy == 0 ? 0 :
+    f32 effectiveMass2 = (linearThingy + rotationalThingy == 0 ? 0 :
              -1.f/(linearThingy + rotationalThingy));
                 
     f32 newVel = dot(deltaP, r1->v - r2->v)
         + jacobiAngle1 * r1->angularVel
         + jacobiAngle2 * r2->angularVel;
     f32 bias = state->jointPositionalBiasCoef / dt * 0.5f * sqrmag(deltaP);
-    f32 impulseCoef = effectiveMass * (newVel + bias);
+    f32 impulseCoef = effectiveMass2 * (newVel + bias);
                 
     v2 linDeltaV1 =  impulseCoef * deltaP / r1->mass;
     v2 linDeltaV2 = -impulseCoef * deltaP / r2->mass;
@@ -249,5 +243,30 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
     if (!r2->fixed) {
         r2->v += linDeltaV2;
         r2->angularVel += rotDelta2;
+    }
+
+    // --- ROTATION RESOLUTION ---
+    angVel = r1->angularVel - r2->angularVel;
+    f32 rotBiasCoef = 0.f;
+    f32 rotBias = rotBiasCoef / dt * theta;
+    angImpulse = effectiveMass * (angVel + rotBias);
+    if (state->enableRotationalConstraints) {
+        if ((theta < j->minTheta && angVel < 0) ||
+            (theta > j->maxTheta && angVel > 0)) {
+
+            if (!r1->fixed) {
+                r1->angularVel += angImpulse / r1->momentOfInertia;
+            }
+            if (!r2->fixed) {
+                r2->angularVel -= angImpulse / r2->momentOfInertia;
+            }
+        }
+        
+        f32 thetaDiff = bound(theta,j->minTheta,j->maxTheta) - theta;
+		if (thetaDiff > 1.f)
+			normAngle(theta);
+
+        if (!r1->fixed) r1->angle += thetaDiff * (r2->fixed ? 1.f : 0.5f);
+        if (!r2->fixed) r2->angle -= thetaDiff * (r1->fixed ? 1.f : 0.5f);
     }
 }

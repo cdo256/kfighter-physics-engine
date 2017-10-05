@@ -7,7 +7,6 @@
    ======================================================================== */
 
 inline f32 sqr(f32 x) {return x*x;}
-
 inline v2 V2(f32 x, f32 y) {
     v2 result;
     result.x = x;
@@ -76,9 +75,8 @@ inline v2 rotate(v2 vec, f32 angle) {
     result.y = sinf(angle)*vec.x + cosf(angle)*vec.y;
     return result;
 }
-
 inline f32 normAngle(f32 theta) {
-    while (theta >= pi) theta -= 2*pi;
-    while (theta < -pi) theta += 2*pi;
+    if (theta < -pi) theta = pi-fmodf(-theta-pi, 2.f*pi);
+    else theta = fmodf(theta+pi, 2.f*pi)-pi;
     return theta;
 }

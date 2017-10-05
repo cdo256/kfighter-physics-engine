@@ -1,6 +1,6 @@
 # KFighter physics engine
 
-![KFighter screenshot](https://github.com/cdo256/kfighter-physics-engine/raw/master/kfighter/media/screenshot1.png "KFighter screenshot")
+![KFighter screenshot](https://github.com/cdo256/kfighter-physics-engine/raw/master/kfighter/media/screenshot2.png "KFighter screenshot")
 
 The rigid-body physics engine for the unfinished game 'KFighter'.
 
@@ -10,20 +10,26 @@ It's written from scratch in C++ but it may as well be in C since it uses so few
 
 ## Features
 
-- Rect-rect collision
-- Collision islands to allow certain sets of objects to pass through each other
-- Joints with angle constraints
+- Collision detection and resolution
+  - Rectangle collision
+  - Friction
+  - Collision islands (collections of objects typically connected by joints or other constraints that shouldn't collide with each other)
+  - Multiple collision points
+  - Stable stacking
+- Joints
+  - Angle constraints
+  - Joint friction
+  - PID controlled motors
 - Loop live code editing
-- Contraints can be changed in real-time
 
 ## Controls
 
-- _Arrow keys_: adjust gravity
-- _Space bar_: Grap/release rope
-- _Escape_: Quit
-- _P_: Pause
-- _L_: Cycle key recording; cycle between the following three actions: __begin recording__, __end recording and begin playback__, and __end playback__
-- _R_: Reset game
+- `Arrow keys`: Adjust gravity
+- `Space bar`: Cycle poses
+- `Escape`: Quit
+- `[`,`]`: Increment/decrement random seed
+- `L`: Cycle key recording; cycle between the following three actions: __begin recording__, __end recording and begin playback__, and __end playback__
+- _R_: Reset game (keeping the seed the same)
 
 ## How to run
 

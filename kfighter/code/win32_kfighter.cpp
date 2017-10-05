@@ -23,6 +23,7 @@
 */
 
 #include "kfighter.h"
+#include "kfighter_util.h"
 
 #include <windows.h>
 #include <xinput.h>
@@ -242,8 +243,7 @@ internal void win32BeginRecordingInput(Win32State* state) {
     CopyMemory(
         state->gameMemoryTempBlock,
         state->gameMemoryBlock,
-        state->gameMemorySize);
-
+        (size_t)state->gameMemorySize);
 }
 
 internal void win32EndRecordingInput(Win32State* state) {
@@ -257,7 +257,7 @@ internal void win32BeginInputPlayback(Win32State* state) {
     CopyMemory(
         state->gameMemoryBlock,
         state->gameMemoryTempBlock,
-        state->gameMemorySize);
+        (size_t)state->gameMemorySize);
 }
 
 internal void win32EndInputPlayback(Win32State* state) {
@@ -529,7 +529,7 @@ int CALLBACK WinMain(
         + memory.transientStorageSize;
     state.gameMemoryBlock = VirtualAlloc(
         baseAddress,
-        state.gameMemorySize*2,
+        (size_t)state.gameMemorySize*2,
         MEM_COMMIT | MEM_RESERVE,
         PAGE_READWRITE);
     state.gameMemoryTempBlock = (u8*)state.gameMemoryBlock

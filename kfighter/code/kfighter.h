@@ -20,14 +20,10 @@
 
 //NOTE: Platform interface
 
-#define internal static
-#define local_persist static
-#define global static
-
+#include "kfighter_global.h"
 #include "kfighter_maths.h"
 #include "kfighter_physics.h"
-
-global const u32 initialSeed = 0;
+#include "kfighter_player.h"
 
 struct GameOffscreenBuffer {
     void* bitmapMemory;
@@ -108,89 +104,6 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
 
 #define arrayCount(array) (sizeof(array) / sizeof((array)[0]))
 
-global const int playerSegmentCount = 11;
-global const int playerJointCount = 10;
-
-union PlayerSegments {
-    PhysicsRect segments[playerSegmentCount];
-    struct {
-        PhysicsRect head;
-        PhysicsRect chest;
-        PhysicsRect abdomen;
-        PhysicsRect lBicep;
-        PhysicsRect lForearm;
-        PhysicsRect rBicep;
-        PhysicsRect rForearm;
-        PhysicsRect lThigh;
-        PhysicsRect lShin;
-        PhysicsRect rThigh;
-        PhysicsRect rShin;
-    };
-};
-
-union PlayerJoints {
-    PhysicsJoint joints[playerJointCount];
-    struct {
-        PhysicsJoint neck;
-        PhysicsJoint back;
-        PhysicsJoint lShoulder;
-        PhysicsJoint lElbow;
-        PhysicsJoint rShoulder;
-        PhysicsJoint rElbow;
-        PhysicsJoint lHip;
-        PhysicsJoint lKnee;
-        PhysicsJoint rHip;
-        PhysicsJoint rKnee;
-    };
-};
-
-struct PoseJoint {
-    f32 angle;
-    f32 applicationFactor; // 1 is apply fully, 0 is don't apply (used in interpolation)
-};
-
-struct PlayerPose {
-    union {
-        PoseJoint joints[playerJointCount];
-        struct {
-            PoseJoint neck;
-            PoseJoint back;
-            PoseJoint lShoulder;
-            PoseJoint lElbow;
-            PoseJoint rShoulder;
-            PoseJoint rElbow;
-            PoseJoint lHip;
-            PoseJoint lKnee;
-            PoseJoint rHip;
-            PoseJoint rKnee;
-        };
-    };
-};
-
-
-enum Direction {DIRECTION_LEFT, DIRECTION_RIGHT};
-
-struct Player {
-    PlayerSegments* segments;
-    PlayerJoints* joints;
-    PlayerPose* currentPose;
-
-    PhysicsRect* playerRect;
-    
-    PlayerPose *prevPose, *nextPose;
-    f32 strideWheelRadius;
-    f32 strideWheelAngle;
-    //bool running;
-    
-    bool lPunching, rPunching;
-    f32 rPunchTimer, lPunchTimer;
-    v2 lPunchTarget, rPunchTarget;
-    
-    f32 torque;
-    
-    Direction direction;
-};
-
 global const int maxRects = 100;
 global const int maxJoints = 50;
 global const int maxCollsionManifolds = 100;
@@ -242,6 +155,7 @@ struct GameState {
     
     //TODO: Is this random enough?
     u32 randomSeed;
+
     bool enableJoints;
     bool enableCollision;
     bool enableFriction;
@@ -249,6 +163,7 @@ struct GameState {
     bool enablePIDJoints;
     bool enableRotationalConstraints;
     f32 frictionCoef;
+    f32 jointFrictionCoef;
     f32 jointPositionalBiasCoef;
 
     f32 maxMotorTorque;

@@ -57,8 +57,8 @@ internal int supportVector(Polygon* p, v2 vec) {
 
 internal bool doPolygonsIntersect(Polygon* a, Polygon* b, CollisionManifold* manifold) {
     f32 minOverlap = FLT_MAX;
-    Polygon* minShape;
-    Polygon* vertexShape;
+    Polygon* minShape = a;
+    Polygon* vertexShape = a;
     
     for (int shape = 0; shape < 2; shape++) {
         Polygon* p = (shape == 0 ? a : b);
@@ -105,7 +105,7 @@ internal bool doPolygonsIntersect(Polygon* a, Polygon* b, CollisionManifold* man
     int supportIndex;
     if (vertexShape == a || vertexShape == b)
         supportIndex = supportVector(vertexShape, manifold->normal);
-    else int x=5;
+
     v2 supportVertex = vertexShape->verts[supportIndex];
     manifold->depth = minOverlap;
     manifold->pos[0] = supportVertex;// + sign/2.f * minOverlap * manifold->normal / sqrmag(manifold->normal);

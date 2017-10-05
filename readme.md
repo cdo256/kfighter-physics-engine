@@ -29,7 +29,7 @@ It's written from scratch in C++ but it may as well be in C since it uses so few
 - `Escape`: Quit
 - `[`,`]`: Increment/decrement random seed
 - `L`: Cycle key recording; cycle between the following three actions: __begin recording__, __end recording and begin playback__, and __end playback__
-- _R_: Reset game (keeping the seed the same)
+- `R`: Reset game (keeping the seed the same)
 
 ## How to run
 

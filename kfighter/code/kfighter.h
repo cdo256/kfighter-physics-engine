@@ -139,13 +139,6 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
 
 #define arrayCount(array) (sizeof(array) / sizeof((array)[0]))
 
-global const int rectMaxCount = 100;
-global const int jointMaxCount = 50;
-global const int collisionManifoldMaxCount = 200;
-global const int collisionIslandMaxCount = 20;
-global const int poseMaxCount = 20;
-global const int playerMaxCount = 4;
-
 struct PhysicsVariables {
     bool enableJoints;
     bool enableCollision;
@@ -163,14 +156,47 @@ struct PhysicsVariables {
     v2 globalAccel;
 };
 
+#define DECLARE_ARRAY(type,name,max)            \
+    static_storage const int                    \
+    name##MaxCount = (max);                     \
+    int name##Count;                            \
+    type name##Arr[max];
+
+#define ARRAY_APPEND_CHECK(arr)                 \
+    ((arr##Count)<(arr##MaxCount)-1)
+
+#define ARRAY_SIZE_CHECK(arr)                   \
+    ((arr##Count)<(arr##MaxCount))
+
+#define APPEND_TO_ARRAY_WITH_FAIL(arr,val) {    \
+        assert((arr##Count)<(arr##MaxCount)-1); \
+        (arr##Arr)[(arr##Count)++] = (val);     \
+    }
+
+#define APPEND_TO_ARRAY_WITH_CHECK(arr,val)     \
+    if ((arr##Count)<(arr##MaxCount)-1)         \
+        (arr##Arr)[(arr##Count)++] = (val);
+
+#define APPEND_TO_ARRAY_WITHOUT_CHECK(arr,val)  \
+    (arr##Arr)[(arr##Count)++] = (val);
+
+#define GET_NEXT_ARRAY_ELEM_WITH_FAIL(arr) (     \
+        assert((arr##Count)<(arr##MaxCount)-1),  \
+        &(arr##Arr)[(arr##Count)++])
+
+#define GET_NEXT_ARRAY_ELEM_WITH_CHECK(arr) (    \
+        ((arr##Count)<(arr##MaxCount)-1) ?       \
+        &(arr##Arr)[(arr##Count)++] : (void*)0)
+
 struct GameState {
     b32 isInitialised;
-    
-    int playerCount;
-    Player playerArr[playerMaxCount];
 
-    int poseCount;
-    PlayerPose poseArr[poseMaxCount];
+    DECLARE_ARRAY(Player, player, 4)
+    DECLARE_ARRAY(PhysicsRect, rect, 100)
+    DECLARE_ARRAY(PhysicsJoint, joint, 50)
+    DECLARE_ARRAY(CollisionIsland, collisionIsland, 20)
+    DECLARE_ARRAY(CollisionManifold, collisionManifold, 200)
+    DECLARE_ARRAY(PlayerPose, pose, 20)
     PlayerPose* defaultPose;
     PlayerPose* ballPose;
     PlayerPose* readyPose;
@@ -185,18 +211,6 @@ struct GameState {
     PlayerPose* walkingLReachPose;
     PlayerPose* walkingRPassPose;
     PlayerPose* walkingRReachPose;
-
-    int rectCount;
-    PhysicsRect rectArr[rectMaxCount];
-
-    int collisionIslandCount;
-    CollisionIsland collisionIslandArr[collisionIslandMaxCount];
-
-    int jointCount;
-    PhysicsJoint jointArr[jointMaxCount];
-
-    int collisionManifoldCount;
-    CollisionManifold collisionManifoldArr[collisionManifoldMaxCount];
     
     //TODO: Is this random enough?
     u32 randomSeed;

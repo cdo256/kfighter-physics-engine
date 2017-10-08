@@ -14,7 +14,7 @@ internal void makePlayer(
     out Player* pl,
     in GameOffscreenBuffer* buffer) {
     
-    CollisionIsland* ci = &state->collisionIslandArr[state->collisionIslandCount++];
+	CollisionIsland* ci = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->collisionIsland);
     ci->enable = true;
     ci->rectCount = playerSegmentCount;
     ci->rects = &state->rectArr[state->rectCount];
@@ -25,7 +25,7 @@ internal void makePlayer(
     f32 pX = rand(state)*(buffer->width-2*margin) + margin;
     f32 pY = rand(state)*(buffer->height-2*margin) + margin;
     for (int i = 0; i < ci->rectCount; i++) {
-        r = &state->rectArr[state->rectCount++];
+		r = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->rect);
         r->fixed = false;
         r->enableFriction = true;
         r->p.x = pX + (rand(state)-.5f)*50.f;
@@ -78,6 +78,7 @@ internal void makePlayer(
     PlayerSegments* seg = pl->segments;
     pl->joints = (PlayerJoints*)&state->jointArr[state->jointCount];
     state->jointCount += playerJointCount;
+	assert(ARRAY_SIZE_CHECK(state->joint));
     
 #define MAKE_JOINT(joint, part1, part2, min, max, vOffsetFactor) \
     {                                                            \

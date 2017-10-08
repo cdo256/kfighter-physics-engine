@@ -46,6 +46,9 @@
     - Send keyboard past platform layer
     - Automatic resizing game environment whenever window is resized
     - User controlled player
+   Debug:
+    - Logging system for our code
+    - Introspection?
  */
 
 #include "kfighter.h"
@@ -86,8 +89,8 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         makeWalls(state, buffer);
         
         for (int i = 0; i < 6; i++) {
-            PhysicsRect* r = &state->rectArr[state->rectCount++];
-            CollisionIsland* ci = &state->collisionIslandArr[state->collisionIslandCount++];
+            PhysicsRect* r = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->rect);
+            CollisionIsland* ci = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->collisionIsland);
             ci->enable = true;
             ci->rectCount = 1;
             ci->rects = r;
@@ -106,24 +109,25 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         //NOTE: This is a terrible way to do things but I don't think
         //I'll end up using poses in the final version so I can't be
         //bothered to change this.
-        state->readyPose = &state->poseArr[state->poseCount++];
-        state->punchPrepPose = &state->poseArr[state->poseCount++];
-        state->punchExtendPose = &state->poseArr[state->poseCount++];
-        state->defaultPose = &state->poseArr[state->poseCount++];
-        state->ballPose = &state->poseArr[state->poseCount++];
-        state->runningLPassPose = &state->poseArr[state->poseCount++];
-        state->runningLReachPose = &state->poseArr[state->poseCount++];
-        state->runningRPassPose = &state->poseArr[state->poseCount++];
-        state->runningRReachPose = &state->poseArr[state->poseCount++];
-        state->walkingLPassPose = &state->poseArr[state->poseCount++];
-        state->walkingLReachPose = &state->poseArr[state->poseCount++];
-        state->walkingRPassPose = &state->poseArr[state->poseCount++];
-        state->walkingRReachPose = &state->poseArr[state->poseCount++];
+        state->readyPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->punchPrepPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->punchExtendPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->defaultPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->ballPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->runningLPassPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->runningLReachPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->runningRPassPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->runningRReachPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->walkingLPassPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->walkingLReachPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->walkingRPassPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
+        state->walkingRReachPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
 
         state->playerCount = 2;
         makePlayer(state, &state->playerArr[0], buffer);
         makePlayer(state, &state->playerArr[1], buffer);
         makePlayerPoses(state);
+        assert(ARRAY_SIZE_CHECK(state->player));
                  
         state->isInitialised = true;
     }
@@ -266,13 +270,12 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
                             CollisionManifold collisionManifold;
                             if (doPolygonsIntersect(
                                     &p1,&p2,&collisionManifold)) {
-                                if (state->collisionManifoldCount
-                                    < collisionManifoldMaxCount) {
+                                if (ARRAY_APPEND_CHECK(state->collisionManifold)) {
                                     collisionManifold.r1 = r1;
                                     collisionManifold.r2 = r2;
-                                    state->collisionManifoldArr[
-                                        state->collisionManifoldCount++]
-                                        = collisionManifold;
+                                    APPEND_TO_ARRAY_WITHOUT_CHECK(
+                                        state->collisionManifold,
+                                        collisionManifold)
                                 } else {
                                     //NOTE: This should only occur on
                                     //heavy load frames. Nothing bad

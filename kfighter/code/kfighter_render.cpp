@@ -6,22 +6,27 @@
    $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
    ======================================================================== */
 
-
-internal void renderBackground(GameState* state, GameOffscreenBuffer* buffer) {
+internal void
+renderBackground(
+    modified_descendent GameOffscreenBuffer* buffer,
+    u32 colour) {
+    
     for (u32 y = 0; y < buffer->height; y++) {
         u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;
         for (u32 x = 0; x < buffer->width; x++) {
             u8* pixel = row + buffer->bytesPerPixel * x;
-            *((u32*)pixel) = state->backgroundColour;
+            *((u32*)pixel) = colour;
         }
     }
 }
 
-internal void renderPoint(GameOffscreenBuffer* buffer, v2 pos, int size) {
+internal void
+renderPoint(
+    modified_descendent GameOffscreenBuffer* buffer,
+    v2 pos, int size) {
+    
     int xPos = (int)pos.x;
     int yPos = (int)pos.y;
-    //x = bound(x,0,buffer->width);
-    //y = bound(y,0,buffer->height);
     size /= 2;
     
     for (s32 y = max(0,yPos-size);
@@ -37,7 +42,13 @@ internal void renderPoint(GameOffscreenBuffer* buffer, v2 pos, int size) {
     }
 }
 
-internal void renderRectangle(GameOffscreenBuffer* buffer, PhysicsRect* r, u32 colour) {
+//TODO: Use a RenderRect instead
+internal void
+renderRectangle(
+    modified_descendent GameOffscreenBuffer* buffer,
+    in PhysicsRect* r,
+    u32 colour) {
+    
     Polygon pRect;
     computeRectVertices(r, &pRect);
     v2* verts = pRect.verts;
@@ -80,20 +91,29 @@ internal void renderRectangle(GameOffscreenBuffer* buffer, PhysicsRect* r, u32 c
     }
 }
 
-internal void setPixel(GameOffscreenBuffer* buffer, int x, int y, u32 colour) {
-    if (x < 0 || y < 0 || x >= (int)buffer->width || y >= (int)buffer->height) return;
+internal void
+setPixel(modified_descendent GameOffscreenBuffer* buffer,
+         int x, int y, u32 colour) {
+    
+    if (x < 0 || x >= (int)buffer->width ||
+        y < 0 || y >= (int)buffer->height)
+        return;
 
-     u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;  
-     u8* pixel = row + buffer->bytesPerPixel * x;
-     *((u32*)pixel) = colour;
+    u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;  
+    u8* pixel = row + buffer->bytesPerPixel * x;
+    *((u32*)pixel) = colour;
 }
 
 //NOTE: This is using Bresenham's line alg.
-internal void renderLine(GameOffscreenBuffer* buffer, v2 pos1, v2 pos2) {
+internal void
+renderLine(
+    modified_descendent GameOffscreenBuffer* buffer,
+    v2 pos1, v2 pos2) {
+    
     int x0=(int)pos1.x,x1=(int)pos2.x,y0=(int)pos1.y,y1=(int)pos2.y;
  
     int dx = abs(x1-x0), sx = x0<x1 ? 1 : -1;
-    int dy = abs(y1-y0), sy = y0<y1 ? 1 : -1; 
+    int dy = abs(y1-y0), sy = y0<y1 ? 1 : -1;
     int err = (dx>dy ? dx : -dy)/2, e2;
  
     for(;;){

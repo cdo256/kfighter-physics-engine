@@ -59,10 +59,10 @@ inline v2 operator*(f32 scalar, v2 vec);
 inline v2 operator*(v2 vec, f32 scalar);
 inline v2 operator/(v2 vec, f32 scalar);
 
-inline v2 &operator+=(v2 &lhs, v2 rhs);
-inline v2 &operator-=(v2 &lhs, v2 rhs);
-inline v2 &operator*=(v2 &lhs, f32 scalar);
-inline v2 &operator/=(v2 &lhs, f32 scalar);
+inline v2 &operator+=(modified v2 &lhs, v2 rhs);
+inline v2 &operator-=(modified v2 &lhs, v2 rhs);
+inline v2 &operator*=(modified v2 &lhs, f32 scalar);
+inline v2 &operator/=(modified v2 &lhs, f32 scalar);
 
 inline bool operator==(v2 lhs, v2 rhs);
 inline bool operator!=(v2 lhs, v2 rhs);

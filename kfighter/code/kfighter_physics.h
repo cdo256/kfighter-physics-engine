@@ -23,11 +23,13 @@ struct PhysicsRect {
     v2 accel;
     f32 angle;
     f32 angularVel;
+    //TODO: Should I store inverse [mass and moment of inertia] instead?
     f32 mass;
     f32 momentOfInertia;
     bool fixed;
     bool enableFriction;
 
+    //TODO: Does colour belong here?
     u32 colour;
 };
 

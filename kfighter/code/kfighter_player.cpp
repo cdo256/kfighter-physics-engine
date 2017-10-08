@@ -9,7 +9,11 @@
 #include "kfighter.h"
 #include "kfighter_util.h"
 
-internal void makePlayer(GameState* state, Player* pl, GameOffscreenBuffer* buffer) {
+internal void makePlayer(
+    modified GameState* state,
+    out Player* pl,
+    in GameOffscreenBuffer* buffer) {
+    
     CollisionIsland* ci = &state->collisionIslands[state->collisionIslandCount++];
     ci->enable = true;
     ci->count = playerSegmentCount;
@@ -17,15 +21,15 @@ internal void makePlayer(GameState* state, Player* pl, GameOffscreenBuffer* buff
     
     pl->segments = (PlayerSegments*)ci->rects;
     PhysicsRect* r;
-    f32 margin = 50;
+    f32 margin = 150;
     f32 pX = rand(state)*(buffer->width-2*margin) + margin;
     f32 pY = rand(state)*(buffer->height-2*margin) + margin;
     for (int i = 0; i < ci->count; i++) {
         r = &state->rects[state->rectCount++];
         r->fixed = false;
         r->enableFriction = true;
-        r->p.x = pX + (rand(state)-.5f)*50;
-        r->p.x = pY + (rand(state)-.5f)*50;
+        r->p.x = pX + (rand(state)-.5f)*50.f;
+        r->p.y = pY + (rand(state)-.5f)*50.f;
         r->v.x = (rand(state)-0.5f)*20.f;
         r->v.y = (rand(state)-0.5f)*20.f;
         r->lastV = r->v;
@@ -94,18 +98,6 @@ internal void makePlayer(GameState* state, Player* pl, GameOffscreenBuffer* buff
         j->enable = true;                                        \
     }
 
-#if 0 // Debug constraints
-    MAKE_JOINT(neck,      head,    chest,    -0.30f, 0.40f, 5.f/3.f);
-    MAKE_JOINT(back,      chest,   abdomen,  -0.00f, 0.00f, 1.f);
-    MAKE_JOINT(lShoulder, chest,   lBicep,   -0.70f, 0.90f, -0.0f);
-    MAKE_JOINT(lElbow,    lBicep,  lForearm, -0.00f, 0.80f, 1.f);
-    MAKE_JOINT(rShoulder, chest,   rBicep,   -0.70f, 0.90f, -0.0f);
-    MAKE_JOINT(rElbow,    rBicep,  rForearm, -0.00f, 0.80f, 1.f);
-    MAKE_JOINT(lHip,      abdomen, lThigh,   -0.30f, 0.60f, 1.f);
-    MAKE_JOINT(lKnee,     lThigh,  lShin,    -0.70f, 0.00f, 1.f);
-    MAKE_JOINT(rHip,      abdomen, rThigh,   -0.30f, 0.60f, 1.f);
-    MAKE_JOINT(rKnee,     rThigh,  rShin,    -0.70f, 0.00f, 1.f);
-#else
     MAKE_JOINT(neck,      head,    chest,    -0.30f, 0.40f, 5.f/3.f);
     MAKE_JOINT(back,      chest,   abdomen,  -0.05f, 0.20f, 1.f);
     MAKE_JOINT(lShoulder, chest,   lBicep,   -0.70f, 0.90f, -0.0f);
@@ -116,7 +108,6 @@ internal void makePlayer(GameState* state, Player* pl, GameOffscreenBuffer* buff
     MAKE_JOINT(lKnee,     lThigh,  lShin,    -0.70f, 0.00f, 1.f);
     MAKE_JOINT(rHip,      abdomen, rThigh,   -0.30f, 0.60f, 1.f);
     MAKE_JOINT(rKnee,     rThigh,  rShin,    -0.70f, 0.00f, 1.f);
-#endif
     
 #undef MAKE_JOINT
 
@@ -133,7 +124,7 @@ internal void makePlayer(GameState* state, Player* pl, GameOffscreenBuffer* buff
     pl->direction = DIRECTION_RIGHT;
 }
 
-internal PlayerPose lrFlipPlayerPose(PlayerPose* p) {
+internal PlayerPose lrFlipPlayerPose(in PlayerPose* p) {
     PlayerPose result = *p;
     
     result.lShoulder = p->rShoulder;
@@ -149,7 +140,7 @@ internal PlayerPose lrFlipPlayerPose(PlayerPose* p) {
     return result;
 }
 
-internal void makePlayerPoses(GameState* state) {
+internal void makePlayerPoses(modified GameState* state) {
     // Default pose
     PlayerPose* pose = state->defaultPose;
     for (int i = 0; i < playerJointCount; i++) {
@@ -343,7 +334,7 @@ internal void makePlayerPoses(GameState* state) {
 }
 
 
-internal PoseJoint interpolateJoint(f32 t, PoseJoint* j1, PoseJoint* j2) {
+internal PoseJoint interpolateJoint(f32 t, in PoseJoint* j1, in PoseJoint* j2) {
     assert(j1->applicationFactor && j2->applicationFactor);
 
     PoseJoint result;
@@ -354,7 +345,7 @@ internal PoseJoint interpolateJoint(f32 t, PoseJoint* j1, PoseJoint* j2) {
     return result;
 }
 
-internal PoseJoint overlayJoint(f32 t, PoseJoint* j1, PoseJoint* j2) {
+internal PoseJoint overlayJoint(f32 t, in PoseJoint* j1, in PoseJoint* j2) {
     //assert(j1->applicationFactor && j2->applicationFactor);
     
     PoseJoint result;
@@ -365,7 +356,7 @@ internal PoseJoint overlayJoint(f32 t, PoseJoint* j1, PoseJoint* j2) {
     return result;
 }
 
-internal void updatePlayer(GameState* state, Player* pl, f32 dt, GameOffscreenBuffer* buffer) {
+internal void updatePlayer(modified Player* pl, f32 dt) {
     // Match pose
     if (pl->currentPose) { // If matching a specific pose
         PlayerPose pose = *pl->currentPose;
@@ -374,7 +365,6 @@ internal void updatePlayer(GameState* state, Player* pl, f32 dt, GameOffscreenBu
             PhysicsJoint* joint = &pl->joints->joints[i];
             
             joint->targetAngle = targetAngle;
-
             joint->enablePID = true;
             joint->enableMotor = true;
         }

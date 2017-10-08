@@ -66,28 +66,23 @@ struct PlayerPose {
     };
 };
 
-
 enum Direction {DIRECTION_LEFT, DIRECTION_RIGHT};
 
 struct Player {
     PlayerSegments* segments;
     PlayerJoints* joints;
-    PlayerPose* currentPose;
-
-    //PhysicsRect* playerRect;
+    Direction direction;
     
+    //TODO: The following is all legacy stuff and needs to go at some point
+    PlayerPose* currentPose;
     PlayerPose *prevPose, *nextPose;
     f32 strideWheelRadius;
     f32 strideWheelAngle;
-    //bool running;
     
     bool lPunching, rPunching;
     f32 rPunchTimer, lPunchTimer;
     v2 lPunchTarget, rPunchTarget;
-    
     f32 torque;
-    
-    Direction direction;
 };
 
 #define KFIGHTER_PLAYER_H

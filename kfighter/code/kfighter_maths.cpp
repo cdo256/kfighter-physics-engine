@@ -40,10 +40,10 @@ inline v2 operator/(v2 vec, f32 scalar) {
     else return (1/scalar)*vec;
 }
 
-inline v2 &operator+=(v2 &lhs, v2 rhs) {return lhs = lhs+rhs;}
-inline v2 &operator-=(v2 &lhs, v2 rhs) {return lhs = lhs-rhs;}
-inline v2 &operator*=(v2 &lhs, f32 scalar) {return lhs = lhs*scalar;}
-inline v2 &operator/=(v2 &lhs, f32 scalar) {
+inline v2 &operator+=(modified v2 &lhs, v2 rhs) {return lhs = lhs+rhs;}
+inline v2 &operator-=(modified v2 &lhs, v2 rhs) {return lhs = lhs-rhs;}
+inline v2 &operator*=(modified v2 &lhs, f32 scalar) {return lhs = lhs*scalar;}
+inline v2 &operator/=(modified v2 &lhs, f32 scalar) {
     if (scalar == 0) return lhs;
     else return lhs = lhs/scalar;
 }

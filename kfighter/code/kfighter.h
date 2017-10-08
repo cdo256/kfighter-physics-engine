@@ -86,13 +86,13 @@ struct GameMemory {
     void* transientStorage;
 };
 
-#define GAME_UPDATE_AND_RENDER(name) \
-    void name(                       \
-        f32 dt,                      \
-        u32 seed,                    \
-        GameMemory* memory,          \
-        GameInput* input,            \
-        GameOffscreenBuffer* buffer)
+#define GAME_UPDATE_AND_RENDER(name)                     \
+    void name(                                           \
+        f32 dt,                                          \
+        u32 seed,                                        \
+        modified_descendent GameMemory* memory,          \
+        in GameInput* input,                             \
+        modified_descendent GameOffscreenBuffer* buffer)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 GAME_UPDATE_AND_RENDER(gameUpdateAndRenderStub) {}
 //global game_update_and_render* gameUpdateAndRender_ = gameUpdateAndRenderStub;
@@ -106,10 +106,27 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
 
 global const int maxRects = 100;
 global const int maxJoints = 50;
-global const int maxCollsionManifolds = 100;
+global const int maxCollsionManifolds = 200;
 global const int maxCollisionIslands = 20;
 global const int maxPoses = 20;
 global const int maxPlayers = 4;
+
+struct PhysicsVariables {
+    bool enableJoints;
+    bool enableCollision;
+    bool enableFriction;
+    bool enableMotor;
+    bool enablePIDJoints;
+    bool enableRotationalConstraints;
+    f32 frictionCoef;
+    f32 jointFrictionCoef;
+    f32 jointPositionalBiasCoef;
+    f32 maxMotorTorque;
+    f32 motorTargetAngVel;
+        
+    v2 globalForce;
+    v2 globalAccel;
+};
 
 struct GameState {
     b32 isInitialised;
@@ -142,32 +159,16 @@ struct GameState {
 
     int jointCount;
     PhysicsJoint joints[maxJoints];
-    
-    v2 globalForce;
-    v2 globalAccel;
-    int globalAccelTimer;
-    v2 globalVel;
-    v2 globalPos;
 
-    //TODO: Use these
     int collisionManifoldCount;
     CollisionManifold collisionManifolds[maxCollsionManifolds];
     
     //TODO: Is this random enough?
     u32 randomSeed;
 
-    bool enableJoints;
-    bool enableCollision;
-    bool enableFriction;
-    bool enableMotor;
-    bool enablePIDJoints;
-    bool enableRotationalConstraints;
-    f32 frictionCoef;
-    f32 jointFrictionCoef;
-    f32 jointPositionalBiasCoef;
+    f32 metersToPixels;
 
-    f32 maxMotorTorque;
-    f32 motorTargetAngVel;
+    PhysicsVariables physicsVariables;
 
     u32 backgroundColour;
 };

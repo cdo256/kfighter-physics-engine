@@ -9,12 +9,12 @@
 /* TODO: Lots to do before I have a game
    Physics:
     - Multi point collision
-    - Joint friction
-    - Static friction
+    - Static/dynamic friction
     - Collision boucing (bias)
     - Capsule collision detection
     - Is torque being applied correctly?
    Motion Intelligence:
+    - Standing up
     - Target positions and velocity
     - Split by component (eg. legs, arms, torso for punching)
     - attempt to maximize velocity within time t
@@ -24,10 +24,11 @@
     - Ducking and jumping
     - Punching and kicking
     - Walking and running
-    - Standing up
     - Flips
+    - Do players need feet?
    Game:
-    - Other player
+    - Scoring
+    - KOs
    Refactor:
     - Bring out control variables into the state
     - Bring common routines into functions
@@ -35,6 +36,16 @@
     - Remove dead #if 0's
     - Move other #if 0's to own function
     - Memory arenas
+    - First optimisation pass
+    - Get the poses out of the GameState
+   Visuals:
+    - Nicer looking players?
+    - Moving camera?
+   User Interface:
+    - Use mouse to drag parts of the world around
+    - Send keyboard past platform layer
+    - Automatic resizing game environment whenever window is resized
+    - User controlled player
  */
 
 #include "kfighter.h"
@@ -55,29 +66,33 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
     assert(sizeof(GameState) <= memory->permanentStorageSize);
     GameState* state = (GameState*)memory->permanentStorage;
 
+    //NOTE: Force dt for debugging only
+#if KFIGHTER_INTERNAL
     dt = 0.033f;
+#endif
     
     if (!state->isInitialised) {
+        state->metersToPixels = 175.f;
         state->randomSeed = seed;
-        state->enableJoints = true;
-        state->enableFriction = true;
-        state->enableCollision = true;
-        state->enableMotor = true;
-        state->enablePIDJoints = true;
-        state->enableRotationalConstraints = true;
-        state->frictionCoef = 0.1f;
-        state->jointFrictionCoef = 0.05f;
-        state->jointPositionalBiasCoef = 0.6f;
-        state->motorTargetAngVel = 0.f;
-        state->maxMotorTorque = 2000000.f;
+
+        //TODO: bring this out into a funciton
+        state->physicsVariables.enableJoints = true;
+        state->physicsVariables.enableFriction = true;
+        state->physicsVariables.enableCollision = true;
+        state->physicsVariables.enableMotor = true;
+        state->physicsVariables.enablePIDJoints = true;
+        state->physicsVariables.enableRotationalConstraints = true;
+        state->physicsVariables.frictionCoef = 0.1f;
+        state->physicsVariables.jointFrictionCoef = 0.05f;
+        state->physicsVariables.jointPositionalBiasCoef = 0.6f;
+        state->physicsVariables.motorTargetAngVel = 0.f;
+        state->physicsVariables.maxMotorTorque = 2000000.f;
+        
         state->backgroundColour = 0x00FFFFFF;//0x003B80FF;
         
         state->rectCount = 0;
         state->collisionIslandCount = 0;
         state->poseCount = 0;
-
-        state->globalVel = {};
-        state->globalPos = {};
         
         makeWalls(state, buffer);
         
@@ -98,7 +113,10 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
             r->colour = 0x00000000;
             computeMassAndMomentOfInertia(r);
         }
-        
+
+        //NOTE: This is a terrible way to do things but I don't think
+        //I'll end up using poses in the final version so I can't be
+        //bothered to change this.
         state->readyPose = &state->poses[state->poseCount++];
         state->punchPrepPose = &state->poses[state->poseCount++];
         state->punchExtendPose = &state->poses[state->poseCount++];
@@ -149,17 +167,8 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         keyboardAccel.x += keyboardAccelScalar;
     if (controller->right.endedDown)
         keyboardAccel.x -= keyboardAccelScalar;
-
-    if (keyboardAccel == V2(0,0)) {
-        if (state->globalAccelTimer > 0)
-            state->globalAccelTimer--;
-    } else {
-        if (state->globalAccelTimer < 100)
-            state->globalAccelTimer++;
-    }
     
     // ---- UPDATE AND RENDER ----
-
     for (int i = 0; i < state->rectCount; i++) {
         PhysicsRect* r = &state->rects[i];
         r->accel = (r->v - r->lastV) / dt;
@@ -169,23 +178,19 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
     for (int j = 0; j < state->playerCount; j++) {
         for (int i = 0; i < 10; i++) {
             state->players[j].joints->joints[i].targetAngVel
-                = state->motorTargetAngVel;
+                = state->physicsVariables.motorTargetAngVel;
         }
     }
     
-    state->globalForce = {};
-    state->globalAccel = V2(0,-1500.f);
-    state->globalAccel += keyboardAccel;
+    state->physicsVariables.globalForce = {};
+    state->physicsVariables.globalAccel = V2(0,-1500.f);
+    state->physicsVariables.globalAccel += keyboardAccel;
 
-    //state->playerBody.torque = keyboardTorque;
-    
-    state->globalVel = state->globalAccel/5.f*(f32)state->globalAccelTimer/100.f;
-    state->globalPos += dt*state->globalVel;
-
-    renderBackground(state, buffer);
+    renderBackground(buffer, state->backgroundColour);
 
     
-#if 1 // test render so we can see debug overlays
+#if 1 //NOTE: Test render so we can see debug overlays
+    //TODO: This is really janky, surely there's a better way.
     // --- RENDER ---
     for (int i = 0; i < state->rectCount; i++) {
         PhysicsRect* r = &state->rects[i];
@@ -223,10 +228,10 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 #endif
 
     for (int i = 0; i < state->playerCount; i++)
-        updatePlayer(state, &state->players[i], dt, buffer);
+        updatePlayer(&state->players[i], dt);
     
     // --- SIMULATE ---
-        
+    
     int iterCount = 30;
     f32 h = dt/iterCount;
     for (int iter = 0; iter < iterCount; iter++) {
@@ -240,8 +245,8 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
                 r->mass = FLT_MAX;
                 r->momentOfInertia = FLT_MAX;
             } else {
-                r->v += h*state->globalForce/r->mass;
-                r->v += h*state->globalAccel;
+                r->v += h*state->physicsVariables.globalForce/r->mass;
+                r->v += h*state->physicsVariables.globalAccel;
             }
             
             r->p += h * r->v;
@@ -250,9 +255,12 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         }
         
         // --- COLLIDE ---
-        if (state->enableCollision) {
+        if (state->physicsVariables.enableCollision) {
             state->collisionManifoldCount = 0;
-            
+
+            //TODO: Is this too slow? Is there a better way to do this
+            //where we only consider objects that are close to
+            //colliding?
             for (int i1 = 0; i1 < state->collisionIslandCount; i1++) {
                 CollisionIsland* ci1 = &state->collisionIslands[i1];
                 if (!ci1->enable) continue;
@@ -267,12 +275,24 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
                             Polygon p2; computeRectVertices(r2, &p2);
                             if (r1->fixed && r2->fixed) continue;
                             CollisionManifold collisionManifold;
-                            if (doPolygonsIntersect(&p1,&p2,&collisionManifold)) {
-                                assert(state->collisionManifoldCount < maxCollsionManifolds);
-                                collisionManifold.r1 = r1;
-                                collisionManifold.r2 = r2;
-                                state->collisionManifolds[state->collisionManifoldCount++]
-                                    = collisionManifold;
+                            if (doPolygonsIntersect(
+                                    &p1,&p2,&collisionManifold)) {
+                                if (state->collisionManifoldCount
+                                    < maxCollsionManifolds) {
+                                    collisionManifold.r1 = r1;
+                                    collisionManifold.r2 = r2;
+                                    state->collisionManifolds[
+                                        state->collisionManifoldCount++]
+                                        = collisionManifold;
+                                } else {
+                                    //NOTE: This should only occur on
+                                    //heavy load frames. Nothing bad
+                                    //happens if we ignore collisions
+                                    //in this case
+
+                                    //TODO: Log that we've run out of
+                                    //manifolds
+                                }
                             }
                         }
                     }
@@ -280,17 +300,23 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
             }
             
             for (int i = 0; i < state->collisionManifoldCount; i++) {
-                resolveCollision(state,h,&state->collisionManifolds[i]);
+                resolveCollision(
+                    &state->physicsVariables,
+                    h,
+                    &state->collisionManifolds[i]);
             }
         }
 
         // --- RESOLVE JOINT CONSTRAINTS ---
         for (int i = 0; i < state->jointCount; i++) {
-            resolveJointConstraint(state, &state->joints[i], h);
+            resolveJointConstraint(
+                &state->physicsVariables,
+                &state->joints[i],
+                h);
         }
     }
 
-#if 0 // actual render position, just need to move this for a test
+#if 0 //NOTE: actual render position, just need to move this for a test
     // --- RENDER ---
     for (int i = 0; i < state->rectCount; i++) {
         PhysicsRect* r = &state->rects[i];

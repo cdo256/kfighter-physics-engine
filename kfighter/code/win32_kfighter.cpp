@@ -67,7 +67,9 @@ struct Win32State {
     u64 gameMemorySize;
 };
 
-internal void win32ConcatStrings(char* source1, char* source2, char* dest, int destCount) {
+internal void
+win32ConcatStrings(
+    in char* source1, in char* source2, out char* dest, int destCount) {
     int destPos = 0;
     for (int i = 0; source1[i]; i++) {
         assert(destPos < destCount);
@@ -99,7 +101,7 @@ struct Win32GameCode {
     b32 isValid;
 };
 
-internal FILETIME win32GetFileLastWriteTime(char* name) {
+internal FILETIME win32GetFileLastWriteTime(in char* name) {
     FILETIME result = {};
 
 #if 0
@@ -119,7 +121,10 @@ internal FILETIME win32GetFileLastWriteTime(char* name) {
     return result;
 }
 
-internal Win32GameCode win32LoadGameCode(char* executablePath, char* sourceDLLName) {
+internal Win32GameCode
+win32LoadGameCode(
+    in char* executablePath, in char* sourceDLLName) {
+    
     Win32GameCode result = {};
 
     char tempDLLName[MAX_PATH];
@@ -143,7 +148,9 @@ internal Win32GameCode win32LoadGameCode(char* executablePath, char* sourceDLLNa
     return result;
 }
 
-internal void win32UnloadGameCode(Win32GameCode* gameCode) {
+internal void
+win32UnloadGameCode(modified Win32GameCode* gameCode) {
+    
     if (gameCode->library) {
         FreeLibrary(gameCode->library);
         gameCode->library = 0;
@@ -169,7 +176,7 @@ struct win32WindowDimension {
     int height;
 };
 
-internal win32WindowDimension win32GetWindowDimension(HWND hwnd) {
+internal win32WindowDimension win32GetWindowDimension(in HWND hwnd) {
     win32WindowDimension ret;
 
     RECT rect;
@@ -181,7 +188,8 @@ internal win32WindowDimension win32GetWindowDimension(HWND hwnd) {
 }
 
 internal void
-win32ResizeDIBSection(win32OffscreenBuffer* buffer, int width, int height) {
+win32ResizeDIBSection(
+    modified win32OffscreenBuffer* buffer, int width, int height) {
     //TODO: Bulletproof this
     buffer->width = width;
     buffer->height = height;
@@ -211,8 +219,8 @@ win32ResizeDIBSection(win32OffscreenBuffer* buffer, int width, int height) {
 
 internal void
 win32DisplayBufferInWindow(
-    win32OffscreenBuffer buffer,
-    HDC hdc,
+    in win32OffscreenBuffer buffer,
+    in HDC hdc,
     int windowWidth,
     int windowHeight,
     int x,
@@ -235,7 +243,7 @@ win32DisplayBufferInWindow(
 }
 
 
-internal void win32BeginRecordingInput(Win32State* state) {
+internal void win32BeginRecordingInput(modified Win32State* state) {
     state->inputRecordingPosition = 0;
     state->inputBufferSize = 0;
     state->recordingInput = true;
@@ -246,11 +254,11 @@ internal void win32BeginRecordingInput(Win32State* state) {
         (size_t)state->gameMemorySize);
 }
 
-internal void win32EndRecordingInput(Win32State* state) {
+internal void win32EndRecordingInput(modified Win32State* state) {
     state->recordingInput = false;
 }
 
-internal void win32BeginInputPlayback(Win32State* state) {
+internal void win32BeginInputPlayback(modified Win32State* state) {
     state->inputPlaybackPosition = 0;
     state->playingInput = true;
 
@@ -260,11 +268,12 @@ internal void win32BeginInputPlayback(Win32State* state) {
         (size_t)state->gameMemorySize);
 }
 
-internal void win32EndInputPlayback(Win32State* state) {
+internal void win32EndInputPlayback(modified Win32State* state) {
     state->playingInput = false;
 }
 
-internal void win32RecordInput(Win32State* state, GameInput* input) {
+internal void win32RecordInput(
+    modified Win32State* state, in GameInput* input) {
     assert(state->recordingInput);
     state->inputBuffer[state->inputRecordingPosition++]
         = *input;
@@ -274,7 +283,8 @@ internal void win32RecordInput(Win32State* state, GameInput* input) {
     assert(state->inputBufferSize <= win32InputBufferMaxSize);
 }
 
-internal void win32PlaybackInput(Win32State* state, GameInput* input) {
+internal void win32PlaybackInput(
+    modified Win32State* state, out GameInput* input) {
     assert(state->playingInput);
     *input = state->inputBuffer[state->inputPlaybackPosition++];
     if (state->inputPlaybackPosition >= state->inputBufferSize) {
@@ -346,14 +356,19 @@ win32MainWindowCallback(
     return lResult;
 }
 
-internal void win32ProcessKeyboardMessage(GameButtonState* state, b32 isDown) {
+internal void
+win32ProcessKeyboardMessage(
+    out GameButtonState* state, b32 isDown) {
     //TODO: This keeps triggering when exiting the window
     //assert(state->endedDown != isDown);
     state->endedDown = isDown;
     state->halfTransitionCount++;
 }
 
-void win32ProcessPendingMessages(Win32State* state, GameControllerInput* keyboardController) {
+void win32ProcessPendingMessages(
+    modified Win32State* state,
+    modified GameControllerInput* keyboardController) {
+    
     MSG msg;
     while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
         switch (msg.message) {
@@ -483,18 +498,19 @@ inline f32 win32GetSecondsElapsedSince(u64 start) {
 
 internal void win32ProcessXInputDigitalButton(
     DWORD xinputButtonState,
-    GameButtonState* oldState,
+    in GameButtonState* oldState,
     DWORD buttonBit,
-    GameButtonState* newState) {
+    out GameButtonState* newState) {
 
     newState->endedDown = ((xinputButtonState & buttonBit) == buttonBit);
-    newState->halfTransitionCount = (oldState->endedDown != newState->endedDown) ? 1 : 0;
+    newState->halfTransitionCount =
+        (oldState->endedDown != newState->endedDown) ? 1 : 0;
 }
 
 int CALLBACK WinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
-    LPSTR     lpCmdLine,
+    in LPSTR  lpCmdLine,
     int       nCmdShow) {
 
     //NOTE: Never use MAX_PATH in user facing code

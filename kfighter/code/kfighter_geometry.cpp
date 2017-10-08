@@ -6,8 +6,10 @@
    $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
    ======================================================================== */
 
+#include "kfighter_physics.h"
+
 //NOTE: Computes vertices anticlockwise
-internal void computeRectVertices(PhysicsRect* r, Polygon* res) {
+internal void computeRectVertices(in PhysicsRect* r, out Polygon* res) {
     res->count = 4;
     res->center = r->p;
     assert(res->count <= maxVerticesInPolygon);
@@ -21,13 +23,13 @@ internal void computeRectVertices(PhysicsRect* r, Polygon* res) {
         res->verts[i] += r->p;
 }
 
+#if 0
 struct SupportVectors {
     int count;
     int indices[2];
 };
 
-#if 0
-internal SupportVectors supportVectors(Polygon* p, v2 vec) {
+internal SupportVectors supportVectors(in Polygon* p, v2 vec) {
     f32 maxProjected = -FLT_MAX;
     f32 maxProjected2 = -FLT_MAX;
     int maxIndex;
@@ -42,7 +44,7 @@ internal SupportVectors supportVectors(Polygon* p, v2 vec) {
 }
 #endif
 
-internal int supportVector(Polygon* p, v2 vec) {
+internal int supportVector(in Polygon* p, v2 vec) {
     f32 maxProjected = -FLT_MAX;
     int maxIndex;
     for (int i = 0; i < p->count; i++) {
@@ -55,7 +57,13 @@ internal int supportVector(Polygon* p, v2 vec) {
     return maxIndex;
 }
 
-internal bool doPolygonsIntersect(Polygon* a, Polygon* b, CollisionManifold* manifold) {
+//TODO: Multi point collision
+internal bool doPolygonsIntersect(
+    in Polygon* a, in Polygon* b,
+    out CollisionManifold* manifold) {
+    
+    //NOTE: minShape and vertexShape need to exist in case the physics
+    //gets janky.
     f32 minOverlap = FLT_MAX;
     Polygon* minShape = a;
     Polygon* vertexShape = a;
@@ -108,13 +116,13 @@ internal bool doPolygonsIntersect(Polygon* a, Polygon* b, CollisionManifold* man
 
     v2 supportVertex = vertexShape->verts[supportIndex];
     manifold->depth = minOverlap;
-    manifold->pos[0] = supportVertex;// + sign/2.f * minOverlap * manifold->normal / sqrmag(manifold->normal);
+    manifold->pos[0] = supportVertex;
     //NOTE: Normal is always pointing from a to b
     manifold->normal = (vertexShape == a ? -1.f : 1.f) * norm(manifold->normal);
     return true;
 }
 
-internal v2 getJointPosition(PhysicsJoint* j) {
+internal v2 getJointPosition(in PhysicsJoint* j) {
     v2 rel1 = rotate(j->relPos1, j->r1->angle);
     v2 rel2 = rotate(j->relPos2, j->r2->angle);
     v2 pos1 = j->r1->p + rel1;
@@ -124,6 +132,7 @@ internal v2 getJointPosition(PhysicsJoint* j) {
 
 }
 
-inline f32 getJointAngle(PhysicsJoint* j) {
-    return j->r1->angle - j->r2->angle;
+//NOTE: This is the external angle
+internal inline f32 getJointAngle(in PhysicsJoint* j) {
+    return normAngle(j->r1->angle - j->r2->angle);
 }

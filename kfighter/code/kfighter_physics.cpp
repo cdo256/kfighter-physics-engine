@@ -6,7 +6,9 @@
    $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
    ======================================================================== */
 
-inline void computeMassAndMomentOfInertia(PhysicsRect* r) {
+internal inline void
+computeMassAndMomentOfInertia(
+    modified PhysicsRect* r) {
     if (r->fixed) {
         r->mass = FLT_MAX;
         r->momentOfInertia = FLT_MAX;
@@ -18,12 +20,11 @@ inline void computeMassAndMomentOfInertia(PhysicsRect* r) {
 }
 
 internal void applyImpulsePair(
-    GameState* state, f32 dt,
     v2 normal,
     f32 impulse,
     v2 pos,
-    PhysicsRect* r1,
-    PhysicsRect* r2) {
+    modified PhysicsRect* r1,
+    modified PhysicsRect* r2) {
     
     normal = norm(normal);
     v2 rel1 = pos - r1->p;
@@ -31,6 +32,8 @@ internal void applyImpulsePair(
     v2 vel1 = r1->v + r1->angularVel * perp(rel1);
     v2 vel2 = r2->v + r2->angularVel * perp(rel2);
 
+    //TODO: Is there a better way of doing this that doesn't require
+    //checking whether every object is fixed loads of times?
     if (!r1->fixed) {
         r1->v += impulse * normal / r1->mass ;
         r1->angularVel += impulse * cross(rel1, normal) / r1->momentOfInertia;
@@ -41,9 +44,11 @@ internal void applyImpulsePair(
     } 
 }
 
-internal void resolveCollision(
-    GameState* state, f32 dt,
-    CollisionManifold* manifold) {
+internal void
+resolveCollision(
+    in PhysicsVariables* pv,
+    f32 dt,
+    modified_descendent CollisionManifold* manifold) {
 
     for (int i = 0; i < manifold->count; i++) {
         v2 pos = manifold->pos[i];
@@ -65,104 +70,77 @@ internal void resolveCollision(
         PhysicsRect r1Before = *r1;
         PhysicsRect r2Before = *r2;
 
-        f32 angularMomentum1Before = r1->angularVel * r1->momentOfInertia;
-        f32 angularMomentum2Before = r2->angularVel * r2->momentOfInertia;
-        f32 angularMomentumBefore = angularMomentum1Before + angularMomentum2Before;
-    
-        f32 linEnergy1Before = 0.5f * r1->mass * sqrmag(r1->v);
-        f32 rotEnergy1Before =
-            0.5f * r1->momentOfInertia * sqr(r1->angularVel);
-        f32 kineticEnergy1Before = linEnergy1Before + rotEnergy1Before;
-        f32 potentialEnergy1Before = -r1->mass * dot(r1->p, state->globalAccel);
-        f32 energy1Before = kineticEnergy1Before + potentialEnergy1Before;
-    
-        f32 linEnergy2Before = 0.5f * r2->mass * sqrmag(r2->v);
-        f32 rotEnergy2Before =
-            0.5f * r2->momentOfInertia * sqr(r2->angularVel);
-        f32 kineticEnergy2Before = linEnergy2Before + rotEnergy2Before;
-        f32 potentialEnergy2Before = -r2->mass * dot(r2->p, state->globalAccel);
-        f32 energy2Before = kineticEnergy2Before + potentialEnergy2Before;
-    
-        f32 kineticEnergyBefore = kineticEnergy1Before + kineticEnergy2Before;
-        //f32 potentialEnergyBefore = potentialEnergy1Before + potentialEnergy2Before;
-    
-        f32 totalEnergyBefore = kineticEnergyBefore;//energy1Before + energy1Before;
-
-        f32 moment1 = (r1->fixed) ? 0 : sqr(cross(rel1, normal))/r1->momentOfInertia;
-        f32 moment2 = (r2->fixed) ? 0 : sqr(cross(rel2, -normal))/r2->momentOfInertia;
+        f32 moment1 = (r1->fixed) ? 0 :
+            sqr(cross(rel1, normal))/r1->momentOfInertia;
+        f32 moment2 = (r2->fixed) ? 0 :
+            sqr(cross(rel2, -normal))/r2->momentOfInertia;
         f32 momentSum = moment1 + moment2;
         f32 invMassSum = 0;
         if (!r1->fixed) invMassSum += 1.f/r1->mass;
         if (!r2->fixed) invMassSum += 1.f/r2->mass;
         f32 effectiveMass = -1.f/(momentSum+invMassSum);
-        f32 linVel1 = dot(normal, r1->v + dt * state->globalAccel);
-        f32 linVel2 = dot(-normal, r2->v + dt * state->globalAccel);
+        f32 linVel1 = dot(normal, r1->v + dt * pv->globalAccel);
+        f32 linVel2 = dot(-normal, r2->v + dt * pv->globalAccel);
         f32 angVel1 = cross(rel1, normal)*r1->angularVel;
         f32 angVel2 = cross(rel2, -normal)*r2->angularVel;
         f32 impulse = effectiveMass * (linVel1 + linVel2 + angVel1 + angVel2);
 
-        if (impulse >= 0) applyImpulsePair(state, dt, normal, impulse, pos, r1, r2);
-        if (state->enableFriction && r1->enableFriction && r2->enableFriction) {
+        if (impulse >= 0) applyImpulsePair(normal, impulse, pos, r1, r2);
+        if (pv->enableFriction && r1->enableFriction && r2->enableFriction) {
             v2 tangent = perp(normal);
-            f32 moment1 = (r1->fixed) ? 0 : sqr(cross(rel1, tangent))/r1->momentOfInertia;
-            f32 moment2 = (r2->fixed) ? 0 : sqr(cross(rel2, -tangent))/r2->momentOfInertia;
+            f32 moment1 = (r1->fixed) ? 0 :
+                sqr(cross(rel1, tangent))/r1->momentOfInertia;
+            f32 moment2 = (r2->fixed) ? 0 :
+                sqr(cross(rel2, -tangent))/r2->momentOfInertia;
             f32 momentSum = moment1 + moment2;
             f32 invMassSum = 0;
             if (!r1->fixed) invMassSum += 1.f/r1->mass;
             if (!r2->fixed) invMassSum += 1.f/r2->mass;
             f32 effectiveMass = -1.f/(momentSum+invMassSum);
-            f32 linVel1 = dot(tangent, r1->v + dt * state->globalAccel);
-            f32 linVel2 = dot(-tangent, r2->v + dt * state->globalAccel);
+            f32 linVel1 = dot(tangent, r1->v + dt * pv->globalAccel);
+            f32 linVel2 = dot(-tangent, r2->v + dt * pv->globalAccel);
             f32 angVel1 = cross(rel1, tangent)*r1->angularVel;
             f32 angVel2 = cross(rel2, -tangent)*r2->angularVel;
             f32 impulse = effectiveMass * (linVel1 + linVel2 + angVel1 + angVel2);
-            applyImpulsePair(state, dt, tangent, state->frictionCoef*impulse, pos, r1, r2);
+            applyImpulsePair(tangent, pv->frictionCoef*impulse, pos, r1, r2);
         }
-
-        f32 angularMomentum1After = r1->angularVel * r1->momentOfInertia;
-        f32 angularMomentum2After = r2->angularVel * r2->momentOfInertia;
-        f32 angularMomentumAfter = angularMomentum1After + angularMomentum2After;
-    
-        f32 linEnergy1After = 0.5f * r1->mass * sqrmag(r1->v);
-        f32 rotEnergy1After =
-            0.5f * r1->momentOfInertia * sqr(r1->angularVel);
-        f32 energy1After = linEnergy1After + rotEnergy1After;
-
-        f32 linEnergy2After = 0.5f * r2->mass * sqrmag(r2->v);
-        f32 rotEnergy2After =
-            0.5f * r2->momentOfInertia * sqr(r2->angularVel);
-        f32 energy2After = linEnergy2After + rotEnergy2After;
-    
-        f32 totalEnergyAfter = energy1After + energy2After;
     }
 }
 
-internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) {
+internal void
+resolveJointConstraint(
+    in PhysicsVariables* pv,
+    modified_descendent PhysicsJoint* j,
+    f32 dt) {
+    
     if (!j->enable) return;
     PhysicsRect* r1 = j->r1;
     PhysicsRect* r2 = j->r2;
 
-    f32 theta = r1->angle - r2->angle;
-    theta = normAngle(theta);
+    f32 theta = getJointAngle(j);
     f32 angVel = r1->angularVel - r2->angularVel;
     f32 effectiveMass = -1.f / (1.f/r1->momentOfInertia + 1.f/r2->momentOfInertia);
     
     // --- MOTOR ---
-    if (state->enableMotor && j->enableMotor) {
+    if (pv->enableMotor && j->enableMotor) {
         f32 targetAngVel = j->targetAngVel;
         f32 angImpulse = effectiveMass
             * (angVel - targetAngVel);
         
-        if (state->enablePIDJoints && j->enablePID) {
+        if (pv->enablePIDJoints && j->enablePID) {
             //TODO: Tune these
             //TODO: Prevent integral windup:
             // https://en.wikipedia.org/wiki/Integral_windup
             //NOTE: Cranking up ki leads to some kung-fu-like results
-            //f32 kp=300.f,ki=10000.f,kd=0;
-            f32 kp=300000.f,ki=5000.f,kd=1000.f;
+            f32 kp=300.f,ki=10000.f,kd=0;
+            //f32 kp=300000.f,ki=5000.f,kd=1000.f;
             //f32 kp=70000.f,ki=2000.f,kd=10.f;
             f32 error = j->targetAngle - theta;
             f32 integral = j->pidIntegralTerm += dt*error;
+
+            //NOTE: Cap integral to prevent jittering from starting after a while
+            //integral = bound(integral, -0.01f, 0.01f);
+            
             f32 derivative = (error - j->pidLastError)/dt;
             angImpulse = kp*error + ki*integral + kd*derivative;
             j->pidLastError = error;
@@ -174,7 +152,7 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
             */
         }
         
-        f32 maxImpulse = 10000000.f;//state->maxMotorTorque*dt;
+        f32 maxImpulse = 10000000.f;//pv->maxMotorTorque*dt;
         angImpulse = bound(angImpulse, -maxImpulse, maxImpulse);
         if (!r1->fixed) r1->angularVel += angImpulse / r1->momentOfInertia;
         if (!r2->fixed) r2->angularVel -= angImpulse / r2->momentOfInertia;
@@ -187,10 +165,10 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
 
     if (!r1->fixed)
         r1->angularVel +=
-            state->jointFrictionCoef * angImpulse / r1->momentOfInertia;
+            pv->jointFrictionCoef * angImpulse / r1->momentOfInertia;
     if (!r2->fixed)
         r2->angularVel -=
-            state->jointFrictionCoef * angImpulse / r2->momentOfInertia;
+            pv->jointFrictionCoef * angImpulse / r2->momentOfInertia;
     
     // --- VELOCITY RESOLUTION ---
     v2 rel1 = rotate(j->relPos1, r1->angle);
@@ -229,7 +207,7 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
     f32 newVel = dot(deltaP, r1->v - r2->v)
         + jacobiAngle1 * r1->angularVel
         + jacobiAngle2 * r2->angularVel;
-    f32 bias = state->jointPositionalBiasCoef / dt * 0.5f * sqrmag(deltaP);
+    f32 bias = pv->jointPositionalBiasCoef / dt * 0.5f * sqrmag(deltaP);
     f32 impulseCoef = effectiveMass2 * (newVel + bias);
                 
     v2 linDeltaV1 =  impulseCoef * deltaP / r1->mass;
@@ -250,7 +228,7 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
     f32 rotBiasCoef = 0.f;
     f32 rotBias = rotBiasCoef / dt * theta;
     angImpulse = effectiveMass * (angVel + rotBias);
-    if (state->enableRotationalConstraints) {
+    if (pv->enableRotationalConstraints) {
         if ((theta < j->minTheta && angVel < 0) ||
             (theta > j->maxTheta && angVel > 0)) {
 
@@ -264,9 +242,9 @@ internal void resolveJointConstraint(GameState* state, PhysicsJoint* j, f32 dt) 
         
         f32 thetaDiff = bound(theta,j->minTheta,j->maxTheta) - theta;
 
-		//NOTE: Debug code, but shouldn't make a difference if left in
-		if (thetaDiff > 1.f)
-			normAngle(theta);
+        //NOTE: Debug code, but shouldn't make a difference if left in
+        if (thetaDiff > 1.f)
+            normAngle(theta);
 
         if (!r1->fixed) r1->angle += thetaDiff * (r2->fixed ? 1.f : 0.5f);
         if (!r2->fixed) r2->angle -= thetaDiff * (r1->fixed ? 1.f : 0.5f);

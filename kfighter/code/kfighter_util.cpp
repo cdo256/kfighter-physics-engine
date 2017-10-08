@@ -8,7 +8,7 @@
 
 #include "kfighter_util.h"
 
-internal void seedRandomNumberGenerator(GameState* state) {
+internal void seedRandomNumberGenerator(modified_(randomSeed) GameState* state) {
     state->randomSeed = (u32)(1103515245 * state->randomSeed + 12345);
 }
 

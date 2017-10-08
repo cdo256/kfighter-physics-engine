@@ -74,8 +74,41 @@ struct GameControllerInput {
     };
 };
 
+//TODO: Can I simplify this? Is there more I need?
+struct GameMouseButtonState {
+    f32 lastTransitionX, lastTransitionY;
+    s32 halfTransitionCount;
+    b32 endedDown;
+};
+
+struct GameMouseInput {
+    GameMouseButtonState leftButton;
+    GameMouseButtonState rightButton;
+    GameMouseButtonState middleButton;
+    f32 scrollStart, scrollEnd;
+    f32 startX, startY;
+    f32 endX, endY;
+
+    b32 isCaptured;
+};
+
+struct GameKeyState {
+    s8 halfTransitionCount : 6;
+    b8 endedDown : 1;
+    b8 seen : 1; //NOTE: This stays cleared until a key press or
+                 //release is seen
+};
+
+//TODO: Do we have the problem of thinking that keys are still down
+//when the window loses focus?
+struct GameKeyboardInput {
+    GameKeyState keys[256];
+};
+
 struct GameInput {
     GameControllerInput controllers[5];
+    GameMouseInput mouse;
+    GameKeyboardInput keyboard;
 };
 
 struct GameMemory {

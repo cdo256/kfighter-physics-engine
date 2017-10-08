@@ -82,6 +82,7 @@ struct GameMouseButtonState {
 };
 
 struct GameMouseInput {
+    b32 enabled;
     GameMouseButtonState leftButton;
     GameMouseButtonState rightButton;
     GameMouseButtonState middleButton;
@@ -102,6 +103,7 @@ struct GameKeyState {
 //TODO: Do we have the problem of thinking that keys are still down
 //when the window loses focus?
 struct GameKeyboardInput {
+    b32 enabled;
     GameKeyState keys[256];
 };
 
@@ -207,9 +209,9 @@ struct GameState {
 };
 
 #if KFIGHTER_SLOW
-#define assert(expr) {if (!(expr)) *(int*)0 = 0;}
+#define assert(expr) (expr) ? (void)0 : *(int*)0 = 0
 #else
-#define assert(expr)
+#define assert(expr) (void)0
 #endif
 
 #define KFIGHTER_H

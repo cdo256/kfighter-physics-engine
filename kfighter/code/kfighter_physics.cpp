@@ -25,12 +25,12 @@ setPhysicsConstants(
 
 internal inline void
 computeMassAndMomentOfInertia(
-    modified PhysicsRect* r) {
+    modified PhysicsRect* r, f32 density) {
     if (r->fixed) {
         r->mass = FLT_MAX;
         r->momentOfInertia = FLT_MAX;
     } else {
-        r->mass = r->w*r->h*0.01f;
+        r->mass = r->w*r->h*density;
         r->momentOfInertia = r->mass *
             (sqr(r->w)+sqr(r->h))/12.f;
     }

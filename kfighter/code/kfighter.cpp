@@ -100,7 +100,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
             r->fixed = false;
             r->enableFriction = true;
             r->colour = 0x00000000;
-            computeMassAndMomentOfInertia(r);
+            computeMassAndMomentOfInertia(r, 0.01f);
         }
 
         //NOTE: This is a terrible way to do things but I don't think

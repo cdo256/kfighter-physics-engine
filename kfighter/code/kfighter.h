@@ -196,21 +196,7 @@ struct GameState {
     DECLARE_ARRAY(PhysicsJoint, joint, 50)
     DECLARE_ARRAY(CollisionIsland, collisionIsland, 20)
     DECLARE_ARRAY(CollisionManifold, collisionManifold, 200)
-    DECLARE_ARRAY(PlayerPose, pose, 20)
-    PlayerPose* defaultPose;
-    PlayerPose* ballPose;
-    PlayerPose* readyPose;
-    PlayerPose* punchPrepPose;
-    PlayerPose* punchExtendPose;
-    
-    PlayerPose* runningLPassPose;
-    PlayerPose* runningLReachPose;
-    PlayerPose* runningRPassPose;
-    PlayerPose* runningRReachPose;    
-    PlayerPose* walkingLPassPose;
-    PlayerPose* walkingLReachPose;
-    PlayerPose* walkingRPassPose;
-    PlayerPose* walkingRReachPose;
+    DECLARE_ARRAY(PlayerPose, pose, PLAYER_POSE_ENUM_COUNT)
     
     //TODO: Is this random enough?
     u32 randomSeed;

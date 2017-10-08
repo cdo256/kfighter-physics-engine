@@ -41,6 +41,7 @@
    Visuals:
     - Nicer looking players?
     - Moving camera?
+    - Visual objects separate from physics objects
    User Interface:
     - Use mouse to drag parts of the world around
     - Send keyboard past platform layer
@@ -49,6 +50,8 @@
    Debug:
     - Logging system for our code
     - Introspection?
+   Admin:
+    - Changelog?
  */
 
 #include "kfighter.h"
@@ -58,6 +61,7 @@
 #include "kfighter_physics.cpp"
 #include "kfighter_render.cpp"
 #include "kfighter_player.cpp"
+
 
 /////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////
@@ -73,18 +77,24 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 #if KFIGHTER_INTERNAL
     dt = 0.033f;
 #endif
+
+
+    // ---- INIT ----
     
     if (!state->isInitialised) {
-        state->metersToPixels = 175.f;
         state->randomSeed = seed;
 
+        state->playerCount = 0;
+        state->rectCount = 0;
+        state->jointCount = 0;
+        state->collisionIslandCount = 0;
+        state->collisionManifoldCount = 0;
+        state->poseCount = PLAYER_POSE_ENUM_COUNT;
+        
+        state->metersToPixels = 175.f;
         setPhysicsConstants(&state->physicsVariables);
         
         state->backgroundColour = 0x00FFFFFF;//0x003B80FF;
-        
-        state->rectCount = 0;
-        state->collisionIslandCount = 0;
-        state->poseCount = 0;
         
         makeWalls(state, buffer);
         
@@ -106,23 +116,6 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
             computeMassAndMomentOfInertia(r, 0.01f);
         }
 
-        //NOTE: This is a terrible way to do things but I don't think
-        //I'll end up using poses in the final version so I can't be
-        //bothered to change this.
-        state->readyPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->punchPrepPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->punchExtendPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->defaultPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->ballPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->runningLPassPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->runningLReachPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->runningRPassPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->runningRReachPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->walkingLPassPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->walkingLReachPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->walkingRPassPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-        state->walkingRReachPose = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->pose);
-
         state->playerCount = 2;
         makePlayer(state, &state->playerArr[0], buffer);
         makePlayer(state, &state->playerArr[1], buffer);
@@ -131,21 +124,18 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
                  
         state->isInitialised = true;
     }
+
     
     // ---- INPUT ----
 
     GameControllerInput* controller = &input->controllers[0];
 
     if (wasTapped(controller->aButton)) {
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < state->playerCount; i++) {
             Player* player = &state->playerArr[i];
-            if (player->currentPose == 0) {
-                player->currentPose = state->poseArr;
-            } else if (player->currentPose >= state->poseArr + state->poseCount) {
-                player->currentPose = 0;
-            } else {
-                player->currentPose++;
-            }
+            player->currentPose++;
+            if (player->currentPose >= state->poseCount)
+                player->currentPose = -1;
         }
     }
     
@@ -160,8 +150,10 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         keyboardAccel.x += keyboardAccelScalar;
     if (controller->right.endedDown)
         keyboardAccel.x -= keyboardAccelScalar;
+
     
     // ---- UPDATE AND RENDER ----
+
     for (int i = 0; i < state->rectCount; i++) {
         PhysicsRect* r = &state->rectArr[i];
         r->accel = (r->v - r->lastV) / dt;
@@ -221,14 +213,19 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 #endif
 
     for (int i = 0; i < state->playerCount; i++)
-        updatePlayer(&state->playerArr[i], dt);
+        updatePlayer(&state->playerArr[i], state->poseArr, dt);
     
     // --- SIMULATE ---
-    
+
+    //TODO: Vary iterCount based on load
+
+    //TODO: Do coarse collision check once to create the (close but
+    //possibly not colliding) manifolds then only test each manifold
+    //for collisions
     int iterCount = 30;
     f32 h = dt/iterCount;
     for (int iter = 0; iter < iterCount; iter++) {
-        // --- UPDATE POSTION ---
+        // -- UPDATE POSTION --
         for (int i = 0; i < state->rectCount; i++) {
             PhysicsRect* r = &state->rectArr[i];
             
@@ -247,7 +244,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
             r->angle = normAngle(r->angle);
         }
         
-        // --- COLLIDE ---
+        // -- COLLIDE --
         if (state->physicsVariables.enableCollision) {
             state->collisionManifoldCount = 0;
 
@@ -299,7 +296,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
             }
         }
 
-        // --- RESOLVE JOINT CONSTRAINTS ---
+        // -- RESOLVE JOINT CONSTRAINTS --
         for (int i = 0; i < state->jointCount; i++) {
             resolveJointConstraint(
                 &state->physicsVariables,

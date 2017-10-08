@@ -12,15 +12,30 @@
 #define global static
 #define static_storage static
 
+
+// === PARAMETER ANNOTATIONS ===
+
 // parameter and all of its descendents are never modified (unless
 // they are shared with a parameter that is modifiable).
 #define in
+
+// parameter is an array and is only read
+#define in_array
+
+// parameter is an index of arr and only the val at that index is read 
+#define in_index(arr)
 
 //TODO: Do we need partial_out or complete_out to show how much of the
 //struct is filled? (eg. setPhysicsConstraints)
 
 // parameter is output only 
 #define out
+
+// parameter is an array and is written to
+#define out_array
+
+// parameter is an index of arr and only the val at that index is written to
+#define out_index(arr)
 
 // parameter may both be read and written to (including all descendents)
 #define modified

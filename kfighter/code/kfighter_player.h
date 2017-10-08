@@ -48,6 +48,24 @@ struct PoseJoint {
     f32 applicationFactor; // 1 is apply fully, 0 is don't apply (used in interpolation)
 };
 
+enum PlayerPoses {
+    PLAYER_POSE_NONE=-1,
+    PLAYER_POSE_DEFAULT,
+    PLAYER_POSE_READY,
+    PLAYER_POSE_BALL,
+    PLAYER_POSE_PUNCH_PREP,
+    PLAYER_POSE_PUNCH_EXTEND,
+    PLAYER_POSE_RUN_L_PASS,
+    PLAYER_POSE_RUN_L_REACH,
+    PLAYER_POSE_RUN_R_PASS,
+    PLAYER_POSE_RUN_R_REACH,
+    PLAYER_POSE_WALK_L_PASS,
+    PLAYER_POSE_WALK_L_REACH,
+    PLAYER_POSE_WALK_R_PASS,
+    PLAYER_POSE_WALK_R_REACH,
+    PLAYER_POSE_ENUM_COUNT
+};
+
 struct PlayerPose {
     union {
         PoseJoint joints[playerJointCount];
@@ -73,9 +91,10 @@ struct Player {
     PlayerJoints* joints;
     Direction direction;
     
-    //TODO: The following is all legacy stuff and needs to go at some point
-    PlayerPose* currentPose;
-    PlayerPose *prevPose, *nextPose;
+    //TODO: The following is all legacy stuff and needs to go (or be
+    //completely redone) at some point
+    s32 currentPose;
+    //PlayerPose *prevPose, *nextPose;
     f32 strideWheelRadius;
     f32 strideWheelAngle;
     

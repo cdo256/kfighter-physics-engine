@@ -14,18 +14,18 @@ internal void makePlayer(
     out Player* pl,
     in GameOffscreenBuffer* buffer) {
     
-    CollisionIsland* ci = &state->collisionIslands[state->collisionIslandCount++];
+    CollisionIsland* ci = &state->collisionIslandArr[state->collisionIslandCount++];
     ci->enable = true;
-    ci->count = playerSegmentCount;
-    ci->rects = &state->rects[state->rectCount];
+    ci->rectCount = playerSegmentCount;
+    ci->rects = &state->rectArr[state->rectCount];
     
     pl->segments = (PlayerSegments*)ci->rects;
     PhysicsRect* r;
     f32 margin = 150;
     f32 pX = rand(state)*(buffer->width-2*margin) + margin;
     f32 pY = rand(state)*(buffer->height-2*margin) + margin;
-    for (int i = 0; i < ci->count; i++) {
-        r = &state->rects[state->rectCount++];
+    for (int i = 0; i < ci->rectCount; i++) {
+        r = &state->rectArr[state->rectCount++];
         r->fixed = false;
         r->enableFriction = true;
         r->p.x = pX + (rand(state)-.5f)*50.f;
@@ -35,7 +35,7 @@ internal void makePlayer(
         r->lastV = r->v;
         r->angle = (rand(state)*2*pi);
         r->angularVel = (rand(state)*pi/4.f);
-        if (pl == &state->players[0]) {
+        if (pl == &state->playerArr[0]) {
             r->colour = 0x00FF0000;
         } else {
             r->colour = 0x000000FF;
@@ -49,7 +49,7 @@ internal void makePlayer(
             r->h = 90.f;
 
             if (i == 3 || i == 4 || i == 7 || i == 8) {
-                if (pl == &state->players[0]) {
+                if (pl == &state->playerArr[0]) {
                     r->colour = 0x00B00000;
                 } else {
                     r->colour = 0x000000B0;
@@ -76,7 +76,7 @@ internal void makePlayer(
 
     // --- MAKE JOINTS ---
     PlayerSegments* seg = pl->segments;
-    pl->joints = (PlayerJoints*)&state->joints[state->jointCount];
+    pl->joints = (PlayerJoints*)&state->jointArr[state->jointCount];
     state->jointCount += playerJointCount;
     
 #define MAKE_JOINT(joint, part1, part2, min, max, vOffsetFactor) \
@@ -113,7 +113,7 @@ internal void makePlayer(
 
     // --- ADDITIONAL VARIABLES ---
     s32 poseID = randIntBetween(state, -1, state->poseCount);
-    pl->currentPose = ~poseID ? state->poses + poseID : 0;
+    pl->currentPose = ~poseID ? state->poseArr + poseID : 0;
     pl->torque = 0;
     pl->rPunching = false;
     pl->lPunching = false;
@@ -150,7 +150,7 @@ internal void makePlayerPoses(modified GameState* state) {
 
     // Ball pose
     pose = state->ballPose;
-    Player* pl = &state->players[0];
+    Player* pl = &state->playerArr[0];
     for (int i = 0; i < playerJointCount; i++) {
         pose->joints[i].angle = pl->joints->joints[i].maxTheta;
         pose->joints[i].applicationFactor = 1.f;

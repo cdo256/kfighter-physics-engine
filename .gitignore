@@ -37,3 +37,6 @@
 
 # VC database files
 *.VC.*
+
+# Visual Studio clutter
+*/.vs/*

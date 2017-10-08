@@ -97,10 +97,10 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         makeWalls(state, buffer);
         
         for (int i = 0; i < 6; i++) {
-            PhysicsRect* r = &state->rects[state->rectCount++];
-            CollisionIsland* ci = &state->collisionIslands[state->collisionIslandCount++];
+            PhysicsRect* r = &state->rectArr[state->rectCount++];
+            CollisionIsland* ci = &state->collisionIslandArr[state->collisionIslandCount++];
             ci->enable = true;
-            ci->count = 1;
+            ci->rectCount = 1;
             ci->rects = r;
             r->w = r->h = 100;
             r->p = V2(buffer->width/6.f + 10*rand(state), i*r->h + r->h/2);
@@ -117,23 +117,23 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         //NOTE: This is a terrible way to do things but I don't think
         //I'll end up using poses in the final version so I can't be
         //bothered to change this.
-        state->readyPose = &state->poses[state->poseCount++];
-        state->punchPrepPose = &state->poses[state->poseCount++];
-        state->punchExtendPose = &state->poses[state->poseCount++];
-        state->defaultPose = &state->poses[state->poseCount++];
-        state->ballPose = &state->poses[state->poseCount++];
-        state->runningLPassPose = &state->poses[state->poseCount++];
-        state->runningLReachPose = &state->poses[state->poseCount++];
-        state->runningRPassPose = &state->poses[state->poseCount++];
-        state->runningRReachPose = &state->poses[state->poseCount++];
-        state->walkingLPassPose = &state->poses[state->poseCount++];
-        state->walkingLReachPose = &state->poses[state->poseCount++];
-        state->walkingRPassPose = &state->poses[state->poseCount++];
-        state->walkingRReachPose = &state->poses[state->poseCount++];
+        state->readyPose = &state->poseArr[state->poseCount++];
+        state->punchPrepPose = &state->poseArr[state->poseCount++];
+        state->punchExtendPose = &state->poseArr[state->poseCount++];
+        state->defaultPose = &state->poseArr[state->poseCount++];
+        state->ballPose = &state->poseArr[state->poseCount++];
+        state->runningLPassPose = &state->poseArr[state->poseCount++];
+        state->runningLReachPose = &state->poseArr[state->poseCount++];
+        state->runningRPassPose = &state->poseArr[state->poseCount++];
+        state->runningRReachPose = &state->poseArr[state->poseCount++];
+        state->walkingLPassPose = &state->poseArr[state->poseCount++];
+        state->walkingLReachPose = &state->poseArr[state->poseCount++];
+        state->walkingRPassPose = &state->poseArr[state->poseCount++];
+        state->walkingRReachPose = &state->poseArr[state->poseCount++];
 
         state->playerCount = 2;
-        makePlayer(state, &state->players[0], buffer);
-        makePlayer(state, &state->players[1], buffer);
+        makePlayer(state, &state->playerArr[0], buffer);
+        makePlayer(state, &state->playerArr[1], buffer);
         makePlayerPoses(state);
                  
         state->isInitialised = true;
@@ -145,10 +145,10 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 
     if (wasTapped(controller->aButton)) {
         for (int i = 0; i < 2; i++) {
-            Player* player = &state->players[i];
+            Player* player = &state->playerArr[i];
             if (player->currentPose == 0) {
-                player->currentPose = state->poses;
-            } else if (player->currentPose >= state->poses + state->poseCount) {
+                player->currentPose = state->poseArr;
+            } else if (player->currentPose >= state->poseArr + state->poseCount) {
                 player->currentPose = 0;
             } else {
                 player->currentPose++;
@@ -170,14 +170,14 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
     
     // ---- UPDATE AND RENDER ----
     for (int i = 0; i < state->rectCount; i++) {
-        PhysicsRect* r = &state->rects[i];
+        PhysicsRect* r = &state->rectArr[i];
         r->accel = (r->v - r->lastV) / dt;
         r->lastV = r->v;
     }
     
     for (int j = 0; j < state->playerCount; j++) {
         for (int i = 0; i < 10; i++) {
-            state->players[j].joints->joints[i].targetAngVel
+            state->playerArr[j].joints->joints[i].targetAngVel
                 = state->physicsVariables.motorTargetAngVel;
         }
     }
@@ -193,12 +193,12 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
     //TODO: This is really janky, surely there's a better way.
     // --- RENDER ---
     for (int i = 0; i < state->rectCount; i++) {
-        PhysicsRect* r = &state->rects[i];
+        PhysicsRect* r = &state->rectArr[i];
         renderRectangle(buffer, r, r->colour);
     }
     for (int i = 0; i < state->playerCount; i++) { // Render player to get rects in correct order
         PhysicsRect* r;
-        PlayerSegments* segs = state->players[i].segments;
+        PlayerSegments* segs = state->playerArr[i].segments;
         
         r = &segs->lShin;
         renderRectangle(buffer, r, r->colour);
@@ -228,7 +228,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 #endif
 
     for (int i = 0; i < state->playerCount; i++)
-        updatePlayer(&state->players[i], dt);
+        updatePlayer(&state->playerArr[i], dt);
     
     // --- SIMULATE ---
     
@@ -237,7 +237,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
     for (int iter = 0; iter < iterCount; iter++) {
         // --- UPDATE POSTION ---
         for (int i = 0; i < state->rectCount; i++) {
-            PhysicsRect* r = &state->rects[i];
+            PhysicsRect* r = &state->rectArr[i];
             
             if (r->fixed) {
                 r->v = V2(0,0);
@@ -262,15 +262,15 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
             //where we only consider objects that are close to
             //colliding?
             for (int i1 = 0; i1 < state->collisionIslandCount; i1++) {
-                CollisionIsland* ci1 = &state->collisionIslands[i1];
+                CollisionIsland* ci1 = &state->collisionIslandArr[i1];
                 if (!ci1->enable) continue;
                 for (int i2 = 0; i2 < i1; i2++) {
-                    CollisionIsland* ci2 = &state->collisionIslands[i2];
+                    CollisionIsland* ci2 = &state->collisionIslandArr[i2];
                     if (!ci2->enable) continue;
-                    for (int ri1 = 0; ri1 < ci1->count; ri1++) {
+                    for (int ri1 = 0; ri1 < ci1->rectCount; ri1++) {
                         PhysicsRect* r1 = &ci1->rects[ri1];
                         Polygon p1; computeRectVertices(r1,&p1);
-                        for (int ri2 = 0; ri2 < ci2->count; ri2++) {
+                        for (int ri2 = 0; ri2 < ci2->rectCount; ri2++) {
                             PhysicsRect* r2 = &ci2->rects[ri2];
                             Polygon p2; computeRectVertices(r2, &p2);
                             if (r1->fixed && r2->fixed) continue;
@@ -278,10 +278,10 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
                             if (doPolygonsIntersect(
                                     &p1,&p2,&collisionManifold)) {
                                 if (state->collisionManifoldCount
-                                    < maxCollsionManifolds) {
+                                    < collisionManifoldMaxCount) {
                                     collisionManifold.r1 = r1;
                                     collisionManifold.r2 = r2;
-                                    state->collisionManifolds[
+                                    state->collisionManifoldArr[
                                         state->collisionManifoldCount++]
                                         = collisionManifold;
                                 } else {
@@ -303,7 +303,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
                 resolveCollision(
                     &state->physicsVariables,
                     h,
-                    &state->collisionManifolds[i]);
+                    &state->collisionManifoldArr[i]);
             }
         }
 
@@ -311,7 +311,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         for (int i = 0; i < state->jointCount; i++) {
             resolveJointConstraint(
                 &state->physicsVariables,
-                &state->joints[i],
+                &state->jointArr[i],
                 h);
         }
     }
@@ -319,7 +319,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 #if 0 //NOTE: actual render position, just need to move this for a test
     // --- RENDER ---
     for (int i = 0; i < state->rectCount; i++) {
-        PhysicsRect* r = &state->rects[i];
+        PhysicsRect* r = &state->rectArr[i];
         renderRectangle(buffer, r, r->colour);
     }
 #endif

@@ -64,8 +64,8 @@ struct PhysicsJoint {
 struct CollisionIsland {
     bool enable;
     
+	int rectCount;
     PhysicsRect* rects;
-    int count;
 };
 
 #define KFIGHTER_PHYSICS_H

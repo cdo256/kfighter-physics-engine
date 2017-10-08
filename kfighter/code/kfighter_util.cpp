@@ -36,18 +36,18 @@ internal bool wasTapped(GameButtonState button) {
 }
 
 internal void makeWalls(GameState* state, GameOffscreenBuffer* buffer) {
-    CollisionIsland* floorIsland = &state->collisionIslands[state->collisionIslandCount++];
-    CollisionIsland* ceilIsland = &state->collisionIslands[state->collisionIslandCount++];
-    CollisionIsland* leftWallIsland = &state->collisionIslands[state->collisionIslandCount++];
-    CollisionIsland* rightWallIsland = &state->collisionIslands[state->collisionIslandCount++];
+    CollisionIsland* floorIsland = &state->collisionIslandArr[state->collisionIslandCount++];
+    CollisionIsland* ceilIsland = &state->collisionIslandArr[state->collisionIslandCount++];
+    CollisionIsland* leftWallIsland = &state->collisionIslandArr[state->collisionIslandCount++];
+    CollisionIsland* rightWallIsland = &state->collisionIslandArr[state->collisionIslandCount++];
 
-    floorIsland->count = ceilIsland->count =
-        leftWallIsland->count = rightWallIsland->count = 1;
+    floorIsland->rectCount = ceilIsland->rectCount =
+        leftWallIsland->rectCount = rightWallIsland->rectCount = 1;
     floorIsland->enable = ceilIsland->enable =
         leftWallIsland->enable = rightWallIsland->enable = true;
     PhysicsRect* r;
     for (int i = 0; i < 4; i++) {
-        r = &state->rects[state->rectCount++];
+        r = &state->rectArr[state->rectCount++];
         r->fixed = true;
         r->enableFriction = true;
         r->v = V2(0,0);

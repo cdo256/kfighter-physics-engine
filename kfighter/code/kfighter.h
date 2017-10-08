@@ -104,12 +104,12 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
 
 #define arrayCount(array) (sizeof(array) / sizeof((array)[0]))
 
-global const int maxRects = 100;
-global const int maxJoints = 50;
-global const int maxCollsionManifolds = 200;
-global const int maxCollisionIslands = 20;
-global const int maxPoses = 20;
-global const int maxPlayers = 4;
+global const int rectMaxCount = 100;
+global const int jointMaxCount = 50;
+global const int collisionManifoldMaxCount = 200;
+global const int collisionIslandMaxCount = 20;
+global const int poseMaxCount = 20;
+global const int playerMaxCount = 4;
 
 struct PhysicsVariables {
     bool enableJoints;
@@ -132,10 +132,10 @@ struct GameState {
     b32 isInitialised;
     
     int playerCount;
-    Player players[maxPlayers];
+    Player playerArr[playerMaxCount];
 
     int poseCount;
-    PlayerPose poses[maxPoses];
+    PlayerPose poseArr[poseMaxCount];
     PlayerPose* defaultPose;
     PlayerPose* ballPose;
     PlayerPose* readyPose;
@@ -152,16 +152,16 @@ struct GameState {
     PlayerPose* walkingRReachPose;
 
     int rectCount;
-    PhysicsRect rects[maxRects];
+    PhysicsRect rectArr[rectMaxCount];
 
     int collisionIslandCount;
-    CollisionIsland collisionIslands[maxCollisionIslands];
+    CollisionIsland collisionIslandArr[collisionIslandMaxCount];
 
     int jointCount;
-    PhysicsJoint joints[maxJoints];
+    PhysicsJoint jointArr[jointMaxCount];
 
     int collisionManifoldCount;
-    CollisionManifold collisionManifolds[maxCollsionManifolds];
+    CollisionManifold collisionManifoldArr[collisionManifoldMaxCount];
     
     //TODO: Is this random enough?
     u32 randomSeed;

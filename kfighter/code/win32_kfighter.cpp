@@ -53,18 +53,18 @@ global bool globalPause;
 global const int win32InputBufferMaxSize = 900; // 30 seconds at 30FPS
 
 struct Win32State {
+    u32 randomSeed;
+    
+    void* gameMemoryBlock;
+    void* gameMemoryTempBlock;
+    u64 gameMemorySize;
+    
     bool recordingInput;
     bool playingInput;
     int inputRecordingPosition;
     int inputPlaybackPosition;
     int inputBufferSize;
     GameInput inputBuffer[win32InputBufferMaxSize];
-
-    u32 randomSeed;
-    
-    void* gameMemoryBlock;
-    void* gameMemoryTempBlock;
-    u64 gameMemorySize;
 };
 
 internal void
@@ -209,7 +209,8 @@ win32ResizeDIBSection(
     int bitmapMemorySize = (width*height)*buffer->bytesPerPixel;
     
     if (buffer->bitmapMemory) {
-        VirtualFree(buffer->bitmapMemory, bitmapMemorySize, MEM_RELEASE);
+        //NOTE: If the size is not zero then this doesn't free anything
+        VirtualFree(buffer->bitmapMemory, 0, MEM_RELEASE);
     }
     
     buffer->bitmapMemory = VirtualAlloc(0, bitmapMemorySize, MEM_COMMIT, PAGE_READWRITE);

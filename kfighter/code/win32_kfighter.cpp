@@ -534,25 +534,32 @@ int CALLBACK WinMain(
     LPVOID baseAddress = 0;
 #endif
 
-    Win32State state = {};
-    state.randomSeed = initialSeed;
+    //TODO: Does putting this struct on the heap make things slower?
+    Win32State* state = (Win32State*)VirtualAlloc(
+        0,
+        sizeof(Win32State),
+        MEM_COMMIT,
+        PAGE_READWRITE);
+    //TODO: What if this fails?
+    
+    state->randomSeed = initialSeed;
 
     GameMemory memory = {};
     memory.permanentStorageSize = MEGABYTES(4);
     memory.transientStorageSize = MEGABYTES(16);
 
-    state.gameMemorySize = memory.permanentStorageSize
+    state->gameMemorySize = memory.permanentStorageSize
         + memory.transientStorageSize;
-    state.gameMemoryBlock = VirtualAlloc(
+    state->gameMemoryBlock = VirtualAlloc(
         baseAddress,
-        (size_t)state.gameMemorySize*2,
+        (size_t)state->gameMemorySize*2,
         MEM_COMMIT | MEM_RESERVE,
         PAGE_READWRITE);
-    state.gameMemoryTempBlock = (u8*)state.gameMemoryBlock
-        + state.gameMemorySize;
+    state->gameMemoryTempBlock = (u8*)state->gameMemoryBlock
+        + state->gameMemorySize;
             
     //NOTE: This is cleared to 0
-    memory.permanentStorage = state.gameMemoryBlock;
+    memory.permanentStorage = state->gameMemoryBlock;
     memory.transientStorage = (u8*)memory.permanentStorage
         + memory.permanentStorageSize;
 
@@ -634,7 +641,7 @@ int CALLBACK WinMain(
                     }
                 }
 
-                win32ProcessPendingMessages(&state, keyboardController);
+                win32ProcessPendingMessages(state, keyboardController);
                 
                 if (xinputLoaded) {
                     //TODO: Should we poll this more frequently?
@@ -763,18 +770,19 @@ int CALLBACK WinMain(
                 buffer.bytesPerPixel = globalBackBuffer.bytesPerPixel;                
 
                 GameInput* input = newInput;
-                if (state.recordingInput) {
-                    win32RecordInput(&state, newInput);
+                if (state->recordingInput) {
+                    win32RecordInput(state, newInput);
                 }
-                if (state.playingInput) {
-                    win32PlaybackInput(&state, playbackInput);
+                if (state->playingInput) {
+                    win32PlaybackInput(state, playbackInput);
                     input = playbackInput;
                 }
                 f32 dt = secondsElapsedForLastFrame;
+                //TODO: should this go inside the game code?
                 if (dt > 0.1f) dt = 0.1f; // cap time jumps to prevent buggy physics
                 gameCode.updateAndRender(
                     dt,
-                    state.randomSeed,
+                    state->randomSeed,
                     &memory,
                     input,
                     &buffer);

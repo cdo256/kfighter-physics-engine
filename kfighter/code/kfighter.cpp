@@ -75,18 +75,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
         state->metersToPixels = 175.f;
         state->randomSeed = seed;
 
-        //TODO: bring this out into a funciton
-        state->physicsVariables.enableJoints = true;
-        state->physicsVariables.enableFriction = true;
-        state->physicsVariables.enableCollision = true;
-        state->physicsVariables.enableMotor = true;
-        state->physicsVariables.enablePIDJoints = true;
-        state->physicsVariables.enableRotationalConstraints = true;
-        state->physicsVariables.frictionCoef = 0.1f;
-        state->physicsVariables.jointFrictionCoef = 0.05f;
-        state->physicsVariables.jointPositionalBiasCoef = 0.6f;
-        state->physicsVariables.motorTargetAngVel = 0.f;
-        state->physicsVariables.maxMotorTorque = 2000000.f;
+        setPhysicsConstants(&state->physicsVariables);
         
         state->backgroundColour = 0x00FFFFFF;//0x003B80FF;
         

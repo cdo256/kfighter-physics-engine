@@ -6,6 +6,23 @@
    $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
    ======================================================================== */
 
+internal void
+setPhysicsConstants(
+    out PhysicsVariables* pv) {
+
+    pv->enableJoints = true;
+    pv->enableFriction = true;
+    pv->enableCollision = true;
+    pv->enableMotor = true;
+    pv->enablePIDJoints = true;
+    pv->enableRotationalConstraints = true;
+    pv->frictionCoef = 0.1f;
+    pv->jointFrictionCoef = 0.05f;
+    pv->jointPositionalBiasCoef = 0.6f;
+    pv->motorTargetAngVel = 0.f;
+    pv->maxMotorTorque = 2000000.f;
+}
+
 internal inline void
 computeMassAndMomentOfInertia(
     modified PhysicsRect* r) {

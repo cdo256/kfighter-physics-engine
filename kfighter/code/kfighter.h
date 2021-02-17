@@ -3,12 +3,12 @@
 /* NOTE:
 
    KFIGHTER_INTERNAL:
-    0 - Build for public release
-    1 - Build for developer only
+	0 - Build for public release
+	1 - Build for developer only
 
    KFIGHTER_SLOW:
-    0 - No slow code allowed
-    1 - Slow(debugging) code welcome
+	0 - No slow code allowed
+	1 - Slow(debugging) code welcome
 */
 
 //NOTE: Platform interface
@@ -19,108 +19,108 @@
 #include "kfighter_player.h"
 
 struct GameOffscreenBuffer {
-    void* bitmapMemory;
-    u32 width;
-    u32 height;
-    u32 pitch;
-    u32 bytesPerPixel;
+	void* bitmapMemory;
+	u32 width;
+	u32 height;
+	u32 pitch;
+	u32 bytesPerPixel;
 };
 
 struct GameButtonState {
-    s32 halfTransitionCount;
-    b32 endedDown;
+	s32 halfTransitionCount;
+	b32 endedDown;
 };
 
 struct GameStickState {
-    f32 startX;
-    f32 startY;
-    f32 endX;
-    f32 endY;
-    f32 minX;
-    f32 minY;
-    f32 maxX;
-    f32 maxY;
+	f32 startX;
+	f32 startY;
+	f32 endX;
+	f32 endY;
+	f32 minX;
+	f32 minY;
+	f32 maxX;
+	f32 maxY;
 };
 
 struct GameControllerInput {
-    b32 isAnalog;
-    
-    GameStickState lStick;
-    GameStickState rStick;
-    
-    union {
-        GameButtonState buttons[12];
-        struct {
-            GameButtonState up;
-            GameButtonState down;
-            GameButtonState left;
-            GameButtonState right;
-            GameButtonState start;
-            GameButtonState back;
-            GameButtonState lShoulder;
-            GameButtonState rShoulder;
-            GameButtonState aButton;
-            GameButtonState bButton;
-            GameButtonState xButton;
-            GameButtonState yButton;
-        };
-    };
+	b32 isAnalog;
+
+	GameStickState lStick;
+	GameStickState rStick;
+
+	union {
+	    GameButtonState buttons[12];
+	    struct {
+	        GameButtonState up;
+	        GameButtonState down;
+	        GameButtonState left;
+	        GameButtonState right;
+	        GameButtonState start;
+	        GameButtonState back;
+	        GameButtonState lShoulder;
+	        GameButtonState rShoulder;
+	        GameButtonState aButton;
+	        GameButtonState bButton;
+	        GameButtonState xButton;
+	        GameButtonState yButton;
+	    };
+	};
 };
 
 //TODO: Can I simplify this? Is there more I need?
 struct GameMouseButtonState {
-    f32 lastTransitionX, lastTransitionY;
-    s32 halfTransitionCount;
-    b32 endedDown;
+	f32 lastTransitionX, lastTransitionY;
+	s32 halfTransitionCount;
+	b32 endedDown;
 };
 
 struct GameMouseInput {
-    b32 enabled;
-    GameMouseButtonState leftButton;
-    GameMouseButtonState rightButton;
-    GameMouseButtonState middleButton;
-    f32 scrollStart, scrollEnd;
-    f32 startX, startY;
-    f32 endX, endY;
+	b32 enabled;
+	GameMouseButtonState leftButton;
+	GameMouseButtonState rightButton;
+	GameMouseButtonState middleButton;
+	f32 scrollStart, scrollEnd;
+	f32 startX, startY;
+	f32 endX, endY;
 
-    b32 isCaptured;
+	b32 isCaptured;
 };
 
 struct GameKeyState {
-    s8 halfTransitionCount : 6;
-    b8 endedDown : 1;
-    b8 seen : 1; //NOTE: This stays cleared until a key press or
-                 //release is seen
+	s8 halfTransitionCount : 6;
+	b8 endedDown : 1;
+	b8 seen : 1; //NOTE: This stays cleared until a key press or
+	             //release is seen
 };
 
 //TODO: Do we have the problem of thinking that keys are still down
 //when the window loses focus?
 struct GameKeyboardInput {
-    b32 enabled;
-    GameKeyState keys[256];
+	b32 enabled;
+	GameKeyState keys[256];
 };
 
 struct GameInput {
-    GameControllerInput controllers[5];
-    GameMouseInput mouse;
-    GameKeyboardInput keyboard;
+	GameControllerInput controllers[5];
+	GameMouseInput mouse;
+	GameKeyboardInput keyboard;
 };
 
 struct GameMemory {
-    u64 permanentStorageSize;
-    void* permanentStorage;
-    
-    u64 transientStorageSize;
-    void* transientStorage;
+	u64 permanentStorageSize;
+	void* permanentStorage;
+
+	u64 transientStorageSize;
+	void* transientStorage;
 };
 
 #define GAME_UPDATE_AND_RENDER(name)                     \
-    void name(                                           \
-        f32 dt,                                          \
-        u32 seed,                                        \
-        modified_descendent GameMemory* memory,          \
-        in GameInput* input,                             \
-        modified_descendent GameOffscreenBuffer* buffer)
+	void name(                                           \
+	    f32 dt,                                          \
+	    u32 seed,                                        \
+	    modified_descendent GameMemory* memory,          \
+	    in GameInput* input,                             \
+	    modified_descendent GameOffscreenBuffer* buffer)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 GAME_UPDATE_AND_RENDER(gameUpdateAndRenderStub) {}
 //global game_update_and_render* gameUpdateAndRender_ = gameUpdateAndRenderStub;
@@ -133,72 +133,72 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
 #define arrayCount(array) (sizeof(array) / sizeof((array)[0]))
 
 struct PhysicsVariables {
-    bool enableJoints;
-    bool enableCollision;
-    bool enableFriction;
-    bool enableMotor;
-    bool enablePIDJoints;
-    bool enableRotationalConstraints;
-    f32 frictionCoef;
-    f32 jointFrictionCoef;
-    f32 jointPositionalBiasCoef;
-    f32 maxMotorTorque;
-    f32 motorTargetAngVel;
-        
-    v2 globalForce;
-    v2 globalAccel;
+	bool enableJoints;
+	bool enableCollision;
+	bool enableFriction;
+	bool enableMotor;
+	bool enablePIDJoints;
+	bool enableRotationalConstraints;
+	f32 frictionCoef;
+	f32 jointFrictionCoef;
+	f32 jointPositionalBiasCoef;
+	f32 maxMotorTorque;
+	f32 motorTargetAngVel;
+
+	v2 globalForce;
+	v2 globalAccel;
 };
 
 #define DECLARE_ARRAY(type,name,max)            \
-    static_storage const int                    \
-    name##MaxCount = (max);                     \
-    int name##Count;                            \
-    type name##Arr[max];
+	static_storage const int                    \
+	name##MaxCount = (max);                     \
+	int name##Count;                            \
+	type name##Arr[max];
 
 #define ARRAY_APPEND_CHECK(arr)                 \
-    ((arr##Count)<(arr##MaxCount)-1)
+	((arr##Count)<(arr##MaxCount)-1)
 
 #define ARRAY_SIZE_CHECK(arr)                   \
-    ((arr##Count)<(arr##MaxCount))
+	((arr##Count)<(arr##MaxCount))
 
 #define APPEND_TO_ARRAY_WITH_FAIL(arr,val) {    \
-        assert((arr##Count)<(arr##MaxCount)-1); \
-        (arr##Arr)[(arr##Count)++] = (val);     \
-    }
+	    assert((arr##Count)<(arr##MaxCount)-1); \
+	    (arr##Arr)[(arr##Count)++] = (val);     \
+	}
 
 #define APPEND_TO_ARRAY_WITH_CHECK(arr,val)     \
-    if ((arr##Count)<(arr##MaxCount)-1)         \
-        (arr##Arr)[(arr##Count)++] = (val);
+	if ((arr##Count)<(arr##MaxCount)-1)         \
+	    (arr##Arr)[(arr##Count)++] = (val);
 
 #define APPEND_TO_ARRAY_WITHOUT_CHECK(arr,val)  \
-    (arr##Arr)[(arr##Count)++] = (val);
+	(arr##Arr)[(arr##Count)++] = (val);
 
 #define GET_NEXT_ARRAY_ELEM_WITH_FAIL(arr) (     \
-        assert((arr##Count)<(arr##MaxCount)-1),  \
-        &(arr##Arr)[(arr##Count)++])
+	    assert((arr##Count)<(arr##MaxCount)-1),  \
+	    &(arr##Arr)[(arr##Count)++])
 
 #define GET_NEXT_ARRAY_ELEM_WITH_CHECK(arr) (    \
-        ((arr##Count)<(arr##MaxCount)-1) ?       \
-        &(arr##Arr)[(arr##Count)++] : (void*)0)
+	    ((arr##Count)<(arr##MaxCount)-1) ?       \
+	    &(arr##Arr)[(arr##Count)++] : (void*)0)
 
 struct GameState {
-    b32 isInitialised;
+	b32 isInitialised;
 
-    DECLARE_ARRAY(Player, player, 4)
-    DECLARE_ARRAY(PhysicsRect, rect, 100)
-    DECLARE_ARRAY(PhysicsJoint, joint, 50)
-    DECLARE_ARRAY(CollisionIsland, collisionIsland, 20)
-    DECLARE_ARRAY(CollisionManifold, collisionManifold, 200)
-    DECLARE_ARRAY(PlayerPose, pose, PLAYER_POSE_ENUM_COUNT)
-    
-    //TODO: Is this random enough?
-    u32 randomSeed;
+	DECLARE_ARRAY(Player, player, 4)
+	DECLARE_ARRAY(PhysicsRect, rect, 100)
+	DECLARE_ARRAY(PhysicsJoint, joint, 50)
+	DECLARE_ARRAY(CollisionIsland, collisionIsland, 20)
+	DECLARE_ARRAY(CollisionManifold, collisionManifold, 200)
+	DECLARE_ARRAY(PlayerPose, pose, PLAYER_POSE_ENUM_COUNT)
 
-    f32 metersToPixels;
+	//TODO: Is this random enough?
+	u32 randomSeed;
 
-    PhysicsVariables physicsVariables;
+	f32 metersToPixels;
 
-    u32 backgroundColour;
+	PhysicsVariables physicsVariables;
+
+	u32 backgroundColour;
 };
 
 #if KFIGHTER_SLOW

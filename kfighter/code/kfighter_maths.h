@@ -39,7 +39,7 @@ global const f32 pi = 3.14152635389793238f;
 inline f32 sqr(f32 x);
 
 struct v2 {
-    f32 x, y;
+	f32 x, y;
 };
 
 inline v2 V2(f32 x, f32 y);

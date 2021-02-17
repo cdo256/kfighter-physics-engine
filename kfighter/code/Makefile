@@ -8,7 +8,7 @@ SOURCE=$(wildcard *.cpp)
 
 $(OBJDIR)/linux_kfighter: linux_kfighter.cpp $(HEADERS)
 	$(CC) $(CFLAGS) -o $(OBJDIR)/linux_kfighter $<
-	
+
 $(OBJDIR)/kfighter: kfighter.cpp $(SOURCE) $(HEADERS)
 	$(CC) $(CFLAGS) -o $(OBJDIR)/kfighter $<
 

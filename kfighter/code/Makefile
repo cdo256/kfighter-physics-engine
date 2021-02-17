@@ -4,20 +4,17 @@ CFLAGS=-Wall -DKFIGHTER_SLOW=1 -DKFIGHTER_INTERNAL=1 -DKFIGHTER_LINUX=1
 LDFLAGS=-incremental:no
 OBJDIR=../build
 HEADERS=$(wildcard *.h)
-OBJECTS=$(wildcard *.cpp)
+SOURCE=$(wildcard *.cpp)
 
-$(OBJDIR)/%.o: %.cpp $(HEADERS)
-	$(CC) $(CFLAGS) -c $<
-
-$(OBJDIR)/linux_kfighter: linux_kfighter.o
-	$(CC) $(CFLAGS) $* $<
+$(OBJDIR)/linux_kfighter: linux_kfighter.cpp $(HEADERS)
+	$(CC) $(CFLAGS) -o $(OBJDIR)/linux_kfighter $<
 	
-$(OBJDIR)/kfighter: $(OBJECTS)
-	$(CC) $(CFLAGS) $* $<
+$(OBJDIR)/kfighter: kfighter.cpp $(SOURCE) $(HEADERS)
+	$(CC) $(CFLAGS) -o $(OBJDIR)/kfighter $<
 
-all: $(OBJDIR)/kfighter $(OBJDIR)/linux_kfighter 
+all: $(OBJDIR)/kfighter $(OBJDIR)/linux_kfighter
 
 clean:
-	rm $(OBJDIR)/*
+	rm $(OBJDIR)/linux_kfighter $(OBJDIR)/kfighter
 
 inc: $(OBJDIR)/kfighter

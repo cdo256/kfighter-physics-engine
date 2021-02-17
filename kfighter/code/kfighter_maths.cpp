@@ -1,11 +1,3 @@
-/* ========================================================================
-   $File: $
-   $Date: $
-   $Revision: $
-   $Creator: Christopher O'Donnell $
-   $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
-   ======================================================================== */
-
 inline f32 sqr(f32 x) {return x*x;}
 inline v2 V2(f32 x, f32 y) {
     v2 result;

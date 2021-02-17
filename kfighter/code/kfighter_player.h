@@ -1,11 +1,4 @@
 #if !defined(KFIGHTER_PLAYER_H)
-/* ========================================================================
-   $File: $
-   $Date: $
-   $Revision: $
-   $Creator: Christopher O'Donnell $
-   $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
-   ======================================================================== */
 
 global const int playerSegmentCount = 11;
 global const int playerJointCount = 10;

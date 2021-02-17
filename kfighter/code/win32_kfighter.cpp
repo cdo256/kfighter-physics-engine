@@ -1,11 +1,3 @@
-/* =====================================================================
-   $File: $
-   $Date: $
-   $Revision: $
-   $Creator: Christopher O'Donnell $
-   $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
-   ======================================================================== */
-
 /* TODO: This is not a final platform layer
    - Save game location
    - Getting a handle to our own executable files

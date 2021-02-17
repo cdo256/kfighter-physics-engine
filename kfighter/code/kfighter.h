@@ -1,11 +1,4 @@
 #if !defined(KFIGHTER_H)
-/* ========================================================================
-   $File: $
-   $Date: $
-   $Revision: $
-   $Creator: Christopher O'Donnell $
-   $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
-   ======================================================================== */
 
 /* NOTE:
 

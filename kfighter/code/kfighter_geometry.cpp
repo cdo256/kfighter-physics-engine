@@ -1,11 +1,3 @@
-/* ========================================================================
-   $File: $
-   $Date: $
-   $Revision: $
-   $Creator: Christopher O'Donnell $
-   $Notice: (C) Copyright 2017 by Dipole Limited. All Rights Reserved. $
-   ======================================================================== */
-
 #include "kfighter_physics.h"
 
 //NOTE: Computes vertices anticlockwise

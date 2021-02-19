@@ -28,13 +28,14 @@ void linuxDrawPattern(XImage* b) {
 		}
 		line += b->bytes_per_line;
 	}
-	offset += 10;
+	offset += 1;
 }
 
 void linuxResizeBackBuffer(int width, int height) {
 	backBuffer->width = width;
 	backBuffer->height = height;
-	backBuffer->data = (char*)realloc(backBuffer->data, 4 * width * height);
+	free(backBuffer->data);
+	backBuffer->data = (char*)malloc(4 * width * height);
 	if (backBuffer->data == NULL) {
 		linuxErrorMessage("Could not resize back buffer.");
 		exit(1);
@@ -111,9 +112,13 @@ int main(int argc, char const* const* argv) {
 		exit(1);
 	}
 	while (running) {
-		XEvent e;
-		XNextEvent(display, &e);
-		linuxHandleEvent(e);
+		while (XPending(display)) {
+			XEvent e;
+			XNextEvent(display, &e);
+			linuxHandleEvent(e);
+		}
+		linuxDrawPattern(backBuffer);
+		XPutImage(display, win, gc, backBuffer, 0, 0, 0, 0, winWidth, winHeight);
 	}
 	XCloseDisplay(display);
 	return 0;

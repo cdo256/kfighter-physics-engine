@@ -12,13 +12,18 @@ global GC gc;
 global Atom wmDeleteWindow;
 global bool running = true;
 global Pixmap pm;
+global int winWidth, winHeight;
 
 void linuxErrorMessage(char const* str) {
 	fprintf(stderr, "Fatal error: %s\n", str);
 }
 
 void linuxResizePixmap(int width, int height) {
-
+	XFreePixmap(display, pm);
+	pm = XCreatePixmap(display, win, width, height, 32);
+	//XResizeWindow(display, win, width, height);
+	winWidth = width;
+	winHeight = height;
 }
 
 void linuxHandleEvent(XEvent ev) {
@@ -27,16 +32,20 @@ void linuxHandleEvent(XEvent ev) {
 		//NOOP
 	} break;
 	case Expose: {
-		XSetForeground(display, gc, 0xFFFFFFFF);
-		XFillRectangle(display, pm, gc, 0, 0, 800, 600);
+	draw:
+		int mx = winWidth/2;
+		int my = winHeight/2;
+		XSetForeground(display, gc, 0x00FFFFFF);
+		XFillRectangle(display, win, gc, 0, 0, winWidth, winHeight);
 		XSetForeground(display, gc, 0xFF0000FF);
-		XFillRectangle(display, pm, gc, 20, 20, 10, 10);
-		XDrawString(display, pm, gc, 10, 50, "hello", 5);
-		XCopyArea(display, pm, win, gc, 0, 0, 800, 600, 0, 0);
+		XFillRectangle(display, pm, gc, mx-10, my-10, 20, 20);
+		XDrawString(display, pm, gc, mx-15, my+30, "hello", 5);
+		//XCopyArea(display, pm, win, gc, 0, 0, winWidth, winHeight, 0, 0);
 	} break;
-	case ResizeRequest: {
-		XResizeRequestEvent e = ev.xresizerequest;
+	case ConfigureNotify: {
+		XConfigureEvent e = ev.xconfigure;
 		linuxResizePixmap(e.width, e.height);
+		goto draw;
 	} break;
 	case ClientMessage: {
 		if ((Atom)ev.xclient.data.l[0] == wmDeleteWindow) {
@@ -44,7 +53,7 @@ void linuxHandleEvent(XEvent ev) {
 		}
 	} break;
 	default: {
-		printf(%Unrecognised message: %i\n", ev.type);
+		printf("Unrecognised message: %i\n", ev.type);
 	} break;
 	}
 }
@@ -66,18 +75,24 @@ int main(int argc, char const* const* argv) {
 	XSetWindowAttributes swa = {0};
 	swa.background_pixel = 0xFFFFFFFF;
 	swa.border_pixel = 0x00000000;
+	swa.bit_gravity = NorthWestGravity;
+	swa.event_mask = FocusChangeMask | KeyPressMask | KeyReleaseMask
+		| ExposureMask | VisibilityChangeMask | StructureNotifyMask
+		| ButtonMotionMask | ButtonPressMask | ButtonReleaseMask;
 	swa.colormap = XCreateColormap(display, root, vinfo.visual, AllocNone);
 	win = XCreateWindow(
 		display, root,
-		0, 0, 800, 600, 1, 32, InputOutput,
-		vinfo.visual, CWBackPixel | CWBorderPixel | CWColormap, &swa);
+		0, 0, 800, 600, 1, 32, InputOutput, vinfo.visual,
+		CWBackPixel | CWBorderPixel | CWBitGravity | CWEventMask | CWColormap, &swa);
 	XStoreName(display, win, "KFighter");
 	wmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", False);
 	XSetWMProtocols(display, win, &wmDeleteWindow, 1);
-	XSelectInput(display, win, ExposureMask | KeyPressMask | ResizeRedirectMask);
 	XMapWindow(display, win);
 	XGCValues xgcvals = {0};
-	gc = XCreateGC(display, win, 0, &xgcvals);
+	xgcvals.graphics_exposures = False;
+	gc = XCreateGC(display, win, GCGraphicsExposures, &xgcvals);
+	winWidth = 800;
+	winHeight = 600;
 	pm = XCreatePixmap(display, win, 800, 600, 32);
 	while (running) {
 		XEvent e;

@@ -20,13 +20,15 @@ void linuxErrorMessage(char const* str) {
 }
 
 void linuxDrawPattern(XImage* b) {
+	local_persist int offset = 0;
 	char* line = b->data;
 	for (int y = 0; y < b->height; y++) {
 		for (int x = 0; x < b->width; x++) {
-			((u32*)line)[x] = (x ^ y) | 0xFF000000;
+			((u32*)line)[x] = (x ^ y) | ((offset + x - y) << 8) | ((x | y) << 16);
 		}
 		line += b->bytes_per_line;
 	}
+	offset += 10;
 }
 
 void linuxResizeBackBuffer(int width, int height) {
@@ -77,13 +79,13 @@ int main(int argc, char const* const* argv) {
 	int screen = XDefaultScreen(display);
 	Window root = XRootWindow(display, screen);
 	XVisualInfo vinfo = {0};
-	if (!XMatchVisualInfo(display, screen, 32, TrueColor, &vinfo)) {
+	if (!XMatchVisualInfo(display, screen, 24, TrueColor, &vinfo)) {
 		linuxErrorMessage("Could not get 32bit static color info.");
 		exit(1);
 	}
 	//TODO: Should we specify more of these?
 	XSetWindowAttributes swa = {0};
-	swa.background_pixel = 0xFFFFFFFF;
+	swa.background_pixel = 0x00FFFFFF;
 	swa.border_pixel = 0x00000000;
 	swa.bit_gravity = NorthWestGravity;
 	swa.event_mask = FocusChangeMask | KeyPressMask | KeyReleaseMask
@@ -92,7 +94,7 @@ int main(int argc, char const* const* argv) {
 	swa.colormap = XCreateColormap(display, root, vinfo.visual, AllocNone);
 	win = XCreateWindow(
 		display, root,
-		0, 0, winWidth, winHeight, 1, 32, InputOutput, vinfo.visual,
+		0, 0, winWidth, winHeight, 1, 24, InputOutput, vinfo.visual,
 		CWBackPixel | CWBorderPixel | CWBitGravity | CWEventMask | CWColormap, &swa);
 	XStoreName(display, win, "KFighter");
 	wmDeleteWindow = XInternAtom(display, "WM_DELETE_WINDOW", False);
@@ -101,7 +103,7 @@ int main(int argc, char const* const* argv) {
 	XGCValues xgcvals = {0};
 	xgcvals.graphics_exposures = False;
 	gc = XCreateGC(display, win, GCGraphicsExposures, &xgcvals);
-	backBuffer = XCreateImage(display, vinfo.visual, 32, ZPixmap, 0,
+	backBuffer = XCreateImage(display, vinfo.visual, 24, ZPixmap, 0,
 		(char*)malloc(4 * winHeight * winWidth),
 		winWidth, winHeight, 32, 4 * winWidth);
 	if (!backBuffer) {

@@ -15,22 +15,22 @@ struct LinuxState {
 	Window win;
 	Atom wmDeleteWindow;
 	Display* display;
+	int xOffset, yOffset;
+	bool key[256];
 };
 
 void linuxErrorMessage(char const* str) {
 	fprintf(stderr, "Fatal error: %s\n", str);
 }
 
-void linuxDrawPattern(XImage* b) {
-	local_persist int offset = 0;
+void linuxDrawPattern(XImage* b, int xOffset, int yOffset) {
 	char* line = b->data;
 	for (int y = 0; y < b->height; y++) {
 		for (int x = 0; x < b->width; x++) {
-			((u32*)line)[x] = (x ^ y) | ((offset + x - y) << 8) | ((x | y) << 16);
+			((u32*)line)[x] = (x ^ y) | ((xOffset + x - y) << 8) | ((x | (y + yOffset)) << 16);
 		}
 		line += b->bytes_per_line;
 	}
-	offset += 1;
 }
 
 void linuxResizeBackBuffer(LinuxState* state, int width, int height) {
@@ -93,7 +93,7 @@ bool linuxInitState(LinuxState* state) {
 }
 
 void linuxRedrawWindow(LinuxState* state) {
-	linuxDrawPattern(state->backBuffer);
+	linuxDrawPattern(state->backBuffer, state->xOffset, state->yOffset);
 	XPutImage(state->display, state->win, state->gc,
 		state->backBuffer, 0, 0, 0, 0, state->winWidth, state->winHeight);
 }
@@ -116,6 +116,18 @@ void linuxHandleEvent(XEvent ev, LinuxState* state) {
 			state->running = false;
 		}
 	} break;
+	case FocusOut: {
+		for (int i = 0; i < 256; i++) {
+			state->key[ev.xkey.keycode] = false;
+		}
+	} break;
+	case KeyPress: case KeyRelease: {
+		XKeyEvent e = ev.xkey;
+		bool isDown = (ev.type == KeyPress);
+		if (e.keycode < 256) {
+			state->key[e.keycode] = isDown;
+		} 
+	} break;
 	default: {
 		printf("Unrecognised message: %i\n", ev.type);
 	} break;
@@ -133,6 +145,11 @@ int main(int argc, char const* const* argv) {
 			XNextEvent(state.display, &e);
 			linuxHandleEvent(e, &state);
 		}
+		int speed = 1;
+		if (state.key[111]) state.yOffset -= speed;
+		if (state.key[116]) state.yOffset += speed;
+		if (state.key[113]) state.xOffset -= speed;
+		if (state.key[114]) state.xOffset += speed;
 		linuxRedrawWindow(&state);
 	}
 	XCloseDisplay(state.display);

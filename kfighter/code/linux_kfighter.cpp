@@ -19,21 +19,25 @@ struct LinuxState {
 	bool key[256];
 };
 
-void linuxErrorMessage(char const* str) {
+internal void
+linuxErrorMessage(char const* str) {
 	fprintf(stderr, "Fatal error: %s\n", str);
 }
 
-void linuxDrawPattern(XImage* b, int xOffset, int yOffset) {
+internal void
+linuxDrawPattern(modified XImage* b, int xOffset, int yOffset) {
 	char* line = b->data;
 	for (int y = 0; y < b->height; y++) {
 		for (int x = 0; x < b->width; x++) {
-			((u32*)line)[x] = (x ^ y) | ((xOffset + x - y) << 8) | ((x | (y + yOffset)) << 16);
+			((u32*)line)[x] = (x ^ y) | ((xOffset + x - y) << 8)
+				| ((x | (y + yOffset)) << 16);
 		}
 		line += b->bytes_per_line;
 	}
 }
 
-void linuxResizeBackBuffer(LinuxState* state, int width, int height) {
+internal void
+linuxResizeBackBuffer(modified LinuxState* state, int width, int height) {
 	state->backBuffer->width = width;
 	state->backBuffer->height = height;
 	free(state->backBuffer->data);
@@ -47,7 +51,8 @@ void linuxResizeBackBuffer(LinuxState* state, int width, int height) {
 	state->winHeight = height;
 }
 
-bool linuxInitState(LinuxState* state) {
+internal bool
+linuxInitState(out LinuxState* state) {
 	state->display = XOpenDisplay(NULL);
 	state->running = true;
 	if (!state->display) {
@@ -92,13 +97,15 @@ bool linuxInitState(LinuxState* state) {
 	return true;
 }
 
-void linuxRedrawWindow(LinuxState* state) {
+internal void
+linuxRedrawWindow(modified LinuxState* state) {
 	linuxDrawPattern(state->backBuffer, state->xOffset, state->yOffset);
 	XPutImage(state->display, state->win, state->gc,
 		state->backBuffer, 0, 0, 0, 0, state->winWidth, state->winHeight);
 }
 
-void linuxHandleEvent(XEvent ev, LinuxState* state) {
+internal void
+linuxHandleEvent(XEvent ev, modified LinuxState* state) {
 	switch (ev.type) {
 	case NoExpose: {
 		//NOOP
@@ -134,7 +141,8 @@ void linuxHandleEvent(XEvent ev, LinuxState* state) {
 	}
 }
 
-int main(int argc, char const* const* argv) {
+int
+main(int argc, char const* const* argv) {
 	LinuxState state = {0};
 	if (!linuxInitState(&state)) {
 		return 1;

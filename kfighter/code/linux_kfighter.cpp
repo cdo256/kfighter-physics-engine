@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <x86intrin.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -150,12 +151,14 @@ ComputeClockInterval(struct timespec start, struct timespec end) {
 int
 main(int argc, char const* const* argv) {
 	LinuxState state = {0};
+	
 	if (!linuxInitState(&state)) {
 		return 1;
 	}
 
 	struct timespec lastCounter;
 	clock_gettime(CLOCK_MONOTONIC, &lastCounter);
+	s64 lastCycleCount = __rdtsc();
 
 	while (state.running) {
 		while (XPending(state.display)) {
@@ -169,11 +172,14 @@ main(int argc, char const* const* argv) {
 		if (state.key[113]) state.xOffset -= speed;
 		if (state.key[114]) state.xOffset += speed;
 		linuxRedrawWindow(&state);
-
+		
 		struct timespec endCounter;
 		clock_gettime(CLOCK_MONOTONIC, &endCounter);
+		s64 endCycleCount = __rdtsc();
 		f32 timeElapsed = ComputeClockInterval(lastCounter, endCounter);
-		printf("%.2fms / %.1fFPS\n", timeElapsed*1000.f, 1.f/timeElapsed);
+		printf("%.2fms, %.1fFPS, %.9li cycles\n", timeElapsed*1000.f, 1.f/timeElapsed,
+			endCycleCount - lastCycleCount);
+		lastCycleCount = endCycleCount;
 		lastCounter = endCounter;
 	}
 	XCloseDisplay(state.display);

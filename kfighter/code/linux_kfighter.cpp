@@ -158,7 +158,7 @@ main(int argc, char const* const* argv) {
 
 	struct timespec lastCounter;
 	clock_gettime(CLOCK_MONOTONIC, &lastCounter);
-	s64 lastCycleCount = __rdtsc();
+	u64 lastCycleCount = __rdtsc();
 
 	while (state.running) {
 		while (XPending(state.display)) {
@@ -175,10 +175,10 @@ main(int argc, char const* const* argv) {
 		
 		struct timespec endCounter;
 		clock_gettime(CLOCK_MONOTONIC, &endCounter);
-		s64 endCycleCount = __rdtsc();
+		u64 endCycleCount = __rdtsc();
 		f32 timeElapsed = ComputeClockInterval(lastCounter, endCounter);
-		printf("%.2fms, %.1fFPS, %.9li cycles\n", timeElapsed*1000.f, 1.f/timeElapsed,
-			endCycleCount - lastCycleCount);
+		printf("%3.2fms/f, %3.1ff/s, %2.2fMc/f\n", timeElapsed*1e3f, 1.f/timeElapsed,
+			(endCycleCount - lastCycleCount) * 1e-6f );
 		lastCycleCount = endCycleCount;
 		lastCounter = endCounter;
 	}

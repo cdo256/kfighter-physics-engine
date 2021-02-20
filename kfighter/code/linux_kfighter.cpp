@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -141,12 +142,21 @@ linuxHandleEvent(XEvent ev, modified LinuxState* state) {
 	}
 }
 
+internal f32
+ComputeClockInterval(struct timespec start, struct timespec end) {
+	return (f32)(end.tv_sec - start.tv_sec) + ((f32)(end.tv_nsec - start.tv_nsec) * 1e-9f);
+}
+
 int
 main(int argc, char const* const* argv) {
 	LinuxState state = {0};
 	if (!linuxInitState(&state)) {
 		return 1;
 	}
+
+	struct timespec lastCounter;
+	clock_gettime(CLOCK_MONOTONIC, &lastCounter);
+
 	while (state.running) {
 		while (XPending(state.display)) {
 			XEvent e;
@@ -159,6 +169,12 @@ main(int argc, char const* const* argv) {
 		if (state.key[113]) state.xOffset -= speed;
 		if (state.key[114]) state.xOffset += speed;
 		linuxRedrawWindow(&state);
+
+		struct timespec endCounter;
+		clock_gettime(CLOCK_MONOTONIC, &endCounter);
+		f32 timeElapsed = ComputeClockInterval(lastCounter, endCounter);
+		printf("%.2fms / %.1fFPS\n", timeElapsed*1000.f, 1.f/timeElapsed);
+		lastCounter = endCounter;
 	}
 	XCloseDisplay(state.display);
 	return 0;

@@ -126,7 +126,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRenderStub) {}
 //global game_update_and_render* gameUpdateAndRender_ = gameUpdateAndRenderStub;
 //#define gameUpdateAndRender gameUpdateAndRender_
 
-GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
+extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
 
 //NOTE: Platform independent declarations
 

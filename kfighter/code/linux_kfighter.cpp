@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdarg.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -35,15 +37,19 @@ struct LinuxState {
 };
 
 internal void
-linuxErrorMessage(char const* str) {
-	fprintf(stderr, "Fatal error: %s\n", str);
+linuxErrorMessage(char const* str, ...) {
+	va_list vl;
+	va_start(vl, str);
+	vfprintf(stderr, str, vl);
+	fprintf(stderr, "\n");
+	va_end(vl);
 }
 
 internal void*
 linuxGetSymbolFromLibrary(void* handle, char const* name) {
 	void* symbol = dlsym(handle, name);
 	if (!symbol) {
-		linuxErrorMessage("Could not find symbol in library.");
+		linuxErrorMessage("Could not find symbol %s in library: %s", name, dlerror());
 		exit(1);
 	}
 	return symbol;
@@ -51,10 +57,13 @@ linuxGetSymbolFromLibrary(void* handle, char const* name) {
 
 internal void*
 linuxLoadLibrary(char const* filename) {
-	void* handle = dlopen(filename, RTLD_NOW | RTLD_LOCAL);
+	char* buffer = (char*)malloc(strlen(filename)+3);
+	strcpy(buffer, "./");
+	strcat(buffer, filename);
+	void* handle = dlopen(buffer, RTLD_NOW | RTLD_LOCAL);
 	if (!handle)
 	{
-		linuxErrorMessage("Could not open library.");
+		linuxErrorMessage("Could not open library %s: %s", filename, dlerror());
 		exit(1);
 	}
 	return handle;
@@ -65,14 +74,13 @@ linuxUnloadLibrary(void* handle) {
 	dlclose(handle);
 }
 
-char fileCopyBuffer[8192]; 
-
 internal bool
 linuxCopyFile(char const* srcFilename, char const* dstFilename) {
+	char fileCopyBuffer[8192];
 	bool success = false;
 	int srcFd = open(srcFilename, O_RDONLY);
 	if (srcFd >= 0) {
-		int dstFd = open(srcFilename, O_WRONLY | O_CREAT);
+		int dstFd = open(dstFilename, O_WRONLY | O_CREAT);
 		if (dstFd >= 0) {
 			for (;;) {
 				ssize_t readResult = read(srcFd, fileCopyBuffer, sizeof(fileCopyBuffer));
@@ -91,12 +99,40 @@ linuxCopyFile(char const* srcFilename, char const* dstFilename) {
 	return success;
 }
 
+internal char*
+linuxGetExecutableDirectory() {
+	char filenameBuffer[4096];
+	ssize_t res = readlink("/proc/self/exe", filenameBuffer, sizeof(filenameBuffer));
+	if (res == sizeof(filenameBuffer)) {
+		linuxErrorMessage("Executable filename too long.");
+		exit(1);
+	} else if (res < 0) {
+		linuxErrorMessage("Could not get executable filename.");
+		exit(1);
+	}
+	filenameBuffer[res] = '\0';
+	char* lastSlash = strrchr(filenameBuffer, '/');
+	assert(lastSlash);
+	lastSlash[1] = '\0';
+	char* dir = (char*)malloc(strlen(filenameBuffer)+1);
+	strcpy(dir, filenameBuffer);
+	return dir;
+}
+
 internal LinuxGameCode
 linuxLoadGameCode() {
 	LinuxGameCode ret = {0};
+	if (unlink("kfighter_temp.so") < 0) {
+		linuxErrorMessage("Could not delete old kfighter_temp.so.");
+	}
 	if (!linuxCopyFile("kfighter.so", "kfighter_temp.so")) {
 		linuxErrorMessage("Could not move file kfighter.so to kfighter_temp.so.");
-		exit(1); 
+		exit(1);
+	}
+	
+	if (chmod("kfighter_temp.so", 0755) < 0) {
+		linuxErrorMessage("Could not set kfighter_temp.so file permissions.");
+		exit(1);
 	}
 	ret.soHandle = linuxLoadLibrary("kfighter_temp.so");
 	ret.updateAndRender = (game_update_and_render*)
@@ -147,6 +183,9 @@ linuxResizeBackBuffer(modified LinuxState* state, int width, int height) {
 
 internal bool
 linuxInitState(out LinuxState* state) {
+	char* dir = linuxGetExecutableDirectory();
+	chdir(dir);
+	free(dir);
 	state->display = XOpenDisplay(NULL);
 	state->running = true;
 	if (!state->display) {

@@ -61,6 +61,7 @@
 /////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////
 
+extern "C"
 GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 	assert(sizeof(GameState) <= memory->permanentStorageSize);
 	GameState* state = (GameState*)memory->permanentStorage;

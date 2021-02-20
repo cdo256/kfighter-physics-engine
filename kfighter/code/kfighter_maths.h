@@ -4,10 +4,6 @@
 #define MEGABYTES(x) (KILOBYTES(x)*1024LL)
 #define GIGABYTES(x) (MEGABYTES(x)*1024LL)
 
-#define min(x,y) ((x)<(y)?(x):(y))
-#define max(x,y) ((x)>(y)?(x):(y))
-#define bound(x,lower,upper) (max((lower),min((upper),(x))))
-
 #include <stdint.h>
 
 #define rand __rand

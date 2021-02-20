@@ -38,9 +38,7 @@ internal void applyImpulsePair(
 	normal = norm(normal);
 	v2 rel1 = pos - r1->p;
 	v2 rel2 = pos - r2->p;
-	v2 vel1 = r1->v + r1->angularVel * perp(rel1);
-	v2 vel2 = r2->v + r2->angularVel * perp(rel2);
-
+	
 	//TODO: Is there a better way of doing this that doesn't require
 	//checking whether every object is fixed loads of times?
 	if (!r1->fixed) {
@@ -69,15 +67,10 @@ resolveCollision(
 	    normal = norm(normal);
 	    v2 rel1 = pos - r1->p;
 	    v2 rel2 = pos - r2->p;
-	    v2 vel1 = r1->v + r1->angularVel * perp(rel1);
-	    v2 vel2 = r2->v + r2->angularVel * perp(rel2);
-
+	    
 	    bool fixed = (r1->fixed || r2->fixed);
 	    if (!r1->fixed) r1->p += depth*normal / (fixed ? 1.f : 2.f);
 	    if (!r2->fixed) r2->p -= depth*normal / (fixed ? 1.f : 2.f); 
-
-	    PhysicsRect r1Before = *r1;
-	    PhysicsRect r2Before = *r2;
 
 	    f32 moment1 = (r1->fixed) ? 0 :
 	        sqr(cross(rel1, normal))/r1->momentOfInertia;
@@ -184,9 +177,7 @@ resolveJointConstraint(
 	v2 rel2 = rotate(j->relPos2, r2->angle);
 	v2 pos1 = r1->p + rel1;
 	v2 pos2 = r2->p + rel2;
-	v2 pos = 0.5f*(pos1 + pos2);
 	assert(!r1->fixed || !r2->fixed);
-	bool fixed = (r1->fixed || r2->fixed);
 
 	// impulse = k * (J q' + bias)
 	// Where
@@ -199,9 +190,6 @@ resolveJointConstraint(
 	//   External force vector F_ext = [F1 | T1 | F2 | T2]^T
 
 	v2 deltaP = pos1 - pos2;
-	v2 deltaV = 
-	    + r1->v + r1->angularVel * perp(rel1)
-	    - r2->v - r2->angularVel * perp(rel2);
 
 	f32 jacobiAngle1 =  cross(rel1, deltaP);
 	f32 jacobiAngle2 = -cross(rel2, deltaP);

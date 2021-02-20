@@ -114,7 +114,7 @@ struct GameMemory {
 	void* transientStorage;
 };
 
-#define GAME_UPDATE_AND_RENDER(name)                     \
+#define GAME_UPDATE_AND_RENDER(name)                         \
 	void name(                                           \
 	    f32 dt,                                          \
 	    u32 seed,                                        \
@@ -149,35 +149,35 @@ struct PhysicsVariables {
 	v2 globalAccel;
 };
 
-#define DECLARE_ARRAY(type,name,max)            \
-	static_storage const int                    \
-	name##MaxCount = (max);                     \
-	int name##Count;                            \
+#define DECLARE_ARRAY(type,name,max)                 \
+	static_storage const int                     \
+	name##MaxCount = (max);                      \
+	int name##Count;                             \
 	type name##Arr[max];
 
-#define ARRAY_APPEND_CHECK(arr)                 \
+#define ARRAY_APPEND_CHECK(arr)                      \
 	((arr##Count)<(arr##MaxCount)-1)
 
-#define ARRAY_SIZE_CHECK(arr)                   \
+#define ARRAY_SIZE_CHECK(arr)                        \
 	((arr##Count)<(arr##MaxCount))
 
-#define APPEND_TO_ARRAY_WITH_FAIL(arr,val) {    \
-	    assert((arr##Count)<(arr##MaxCount)-1); \
-	    (arr##Arr)[(arr##Count)++] = (val);     \
+#define APPEND_TO_ARRAY_WITH_FAIL(arr,val) {         \
+	    assert((arr##Count)<(arr##MaxCount)-1);  \
+	    (arr##Arr)[(arr##Count)++] = (val);      \
 	}
 
-#define APPEND_TO_ARRAY_WITH_CHECK(arr,val)     \
-	if ((arr##Count)<(arr##MaxCount)-1)         \
+#define APPEND_TO_ARRAY_WITH_CHECK(arr,val)          \
+	if ((arr##Count)<(arr##MaxCount)-1)          \
 	    (arr##Arr)[(arr##Count)++] = (val);
 
-#define APPEND_TO_ARRAY_WITHOUT_CHECK(arr,val)  \
+#define APPEND_TO_ARRAY_WITHOUT_CHECK(arr,val)       \
 	(arr##Arr)[(arr##Count)++] = (val);
 
-#define GET_NEXT_ARRAY_ELEM_WITH_FAIL(arr) (     \
+#define GET_NEXT_ARRAY_ELEM_WITH_FAIL(arr) (         \
 	    assert((arr##Count)<(arr##MaxCount)-1),  \
 	    &(arr##Arr)[(arr##Count)++])
 
-#define GET_NEXT_ARRAY_ELEM_WITH_CHECK(arr) (    \
+#define GET_NEXT_ARRAY_ELEM_WITH_CHECK(arr) (        \
 	    ((arr##Count)<(arr##MaxCount)-1) ?       \
 	    &(arr##Arr)[(arr##Count)++] : (void*)0)
 
@@ -202,7 +202,7 @@ struct GameState {
 };
 
 #if KFIGHTER_SLOW
-#define assert(expr) (expr) ? (void)0 : *(int*)0 = 0
+#define assert(expr) (expr) ? (void)0 : (void)(*(int*)0 = 0)
 #else
 #define assert(expr) (void)0
 #endif

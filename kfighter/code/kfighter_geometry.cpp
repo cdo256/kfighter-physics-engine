@@ -1,3 +1,4 @@
+#include "kfighter_maths.h"
 #include "kfighter_physics.h"
 
 //NOTE: Computes vertices anticlockwise

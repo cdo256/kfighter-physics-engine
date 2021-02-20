@@ -2,12 +2,23 @@
 #include <stdio.h>
 #include <time.h>
 #include <x86intrin.h>
+#include <dlfcn.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 
+#include "kfighter.h"
 #include "kfighter_global.h"
 #include "kfighter_maths.h"
+
+struct LinuxGameCode {
+	void* soHandle;
+	game_update_and_render* updateAndRender;
+	b32 isValid;
+};
 
 struct LinuxState {
 	GC gc;
@@ -19,11 +30,92 @@ struct LinuxState {
 	Display* display;
 	int xOffset, yOffset;
 	bool key[256];
+	LinuxGameCode gameCode;
+	s32 loadCounter;
 };
 
 internal void
 linuxErrorMessage(char const* str) {
 	fprintf(stderr, "Fatal error: %s\n", str);
+}
+
+internal void*
+linuxGetSymbolFromLibrary(void* handle, char const* name) {
+	void* symbol = dlsym(handle, name);
+	if (!symbol) {
+		linuxErrorMessage("Could not find symbol in library.");
+		exit(1);
+	}
+	return symbol;
+}
+
+internal void*
+linuxLoadLibrary(char const* filename) {
+	void* handle = dlopen(filename, RTLD_NOW | RTLD_LOCAL);
+	if (!handle)
+	{
+		linuxErrorMessage("Could not open library.");
+		exit(1);
+	}
+	return handle;
+}
+
+internal void
+linuxUnloadLibrary(void* handle) {
+	dlclose(handle);
+}
+
+char fileCopyBuffer[8192]; 
+
+internal bool
+linuxCopyFile(char const* srcFilename, char const* dstFilename) {
+	bool success = false;
+	int srcFd = open(srcFilename, O_RDONLY);
+	if (srcFd >= 0) {
+		int dstFd = open(srcFilename, O_WRONLY | O_CREAT);
+		if (dstFd >= 0) {
+			for (;;) {
+				ssize_t readResult = read(srcFd, fileCopyBuffer, sizeof(fileCopyBuffer));
+				if (readResult == 0) {
+					success = true;
+					break;
+				}
+				if (readResult < 0) break;
+				ssize_t writeResult = write(dstFd, fileCopyBuffer, readResult);
+				if (writeResult != readResult) break; 
+			}
+			close(dstFd);
+		}
+		close(srcFd);
+	}
+	return success;
+}
+
+internal LinuxGameCode
+linuxLoadGameCode() {
+	LinuxGameCode ret = {0};
+	if (!linuxCopyFile("kfighter.so", "kfighter_temp.so")) {
+		linuxErrorMessage("Could not move file kfighter.so to kfighter_temp.so.");
+		exit(1); 
+	}
+	ret.soHandle = linuxLoadLibrary("kfighter_temp.so");
+	ret.updateAndRender = (game_update_and_render*)
+		linuxGetSymbolFromLibrary(ret.soHandle, "gameUpdateAndRender");
+	ret.isValid = (ret.updateAndRender != NULL);
+	if (!ret.isValid) {
+		ret.updateAndRender = gameUpdateAndRenderStub;
+	}
+	return ret;
+}
+
+internal void
+linuxUnloadGameCode(LinuxGameCode *code) {
+	if (code->soHandle) {
+		linuxUnloadLibrary(code->soHandle);
+		code->soHandle = NULL;
+	}
+	code->isValid = false;
+	code->updateAndRender = gameUpdateAndRenderStub;
 }
 
 internal void
@@ -96,12 +188,13 @@ linuxInitState(out LinuxState* state) {
 		linuxErrorMessage("Could not create back buffer.");
 		return false;
 	}
+	state->gameCode = linuxLoadGameCode();
+	state->loadCounter = 0;
 	return true;
 }
 
 internal void
 linuxRedrawWindow(modified LinuxState* state) {
-	linuxDrawPattern(state->backBuffer, state->xOffset, state->yOffset);
 	XPutImage(state->display, state->win, state->gc,
 		state->backBuffer, 0, 0, 0, 0, state->winWidth, state->winHeight);
 }
@@ -166,11 +259,19 @@ main(int argc, char const* const* argv) {
 			XNextEvent(state.display, &e);
 			linuxHandleEvent(e, &state);
 		}
+		if (state.loadCounter++ > 120) {
+			linuxUnloadGameCode(&state.gameCode);
+			state.gameCode = linuxLoadGameCode();
+			state.loadCounter = 0;
+		}
 		int speed = 1;
 		if (state.key[111]) state.yOffset -= speed;
 		if (state.key[116]) state.yOffset += speed;
 		if (state.key[113]) state.xOffset -= speed;
 		if (state.key[114]) state.xOffset += speed;
+		state.gameCode.updateAndRender(0, 0, 0, 0, 0);
+		linuxDrawPattern(state.backBuffer,
+			state.xOffset, state.yOffset);		
 		linuxRedrawWindow(&state);
 		
 		struct timespec endCounter;

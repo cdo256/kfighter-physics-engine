@@ -1,3 +1,17 @@
+#include "kfighter_maths.h"
+
+inline f32 max(f32 x, f32 y) {
+	return x < y ? y : x;
+}
+
+inline f32 min(f32 x, f32 y) {
+	return x < y ? x : y;
+}
+
+inline f32 bound(f32 x, f32 lower, f32 upper) {
+	return max(lower, min(upper, x));
+}
+
 inline f32 sqr(f32 x) {return x*x;}
 inline v2 V2(f32 x, f32 y) {
 	v2 result;

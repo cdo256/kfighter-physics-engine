@@ -1,6 +1,7 @@
-.PHONY: all clean
+.PHONY: all clean inc
 
-CFLAGS=-g -ggdb -Wall -DKFIGHTER_SLOW=1 -DKFIGHTER_INTERNAL=1 -DKFIGHTER_LINUX=1
+CFLAGS=-g -ggdb -Wall -DKFIGHTER_SLOW=1 -DKFIGHTER_INTERNAL=1 -DKFIGHTER_LINUX=1 \
+	-Wno-unused-function
 LDFLAGS=-pthread -lX11 -ldl
 OBJDIR=../build
 HEADERS=$(wildcard *.h)
@@ -9,12 +10,12 @@ SOURCE=$(wildcard *.cpp)
 $(OBJDIR)/linux_kfighter: linux_kfighter.cpp $(HEADERS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OBJDIR)/linux_kfighter $<
 
-$(OBJDIR)/kfighter: kfighter.cpp $(SOURCE) $(HEADERS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OBJDIR)/kfighter $<
+$(OBJDIR)/kfighter.so: kfighter.cpp $(SOURCE) $(HEADERS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -shared -fPIC -o $(OBJDIR)/kfighter.so $<
 
-all: $(OBJDIR)/kfighter $(OBJDIR)/linux_kfighter
+all: $(OBJDIR)/kfighter.so $(OBJDIR)/linux_kfighter
 
 clean:
-	rm $(OBJDIR)/linux_kfighter $(OBJDIR)/kfighter
+	rm -f $(OBJDIR)/linux_kfighter $(OBJDIR)/kfighter.so
 
-inc: $(OBJDIR)/kfighter
+inc: $(OBJDIR)/kfighter.so

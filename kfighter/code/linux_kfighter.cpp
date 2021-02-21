@@ -34,6 +34,9 @@ struct LinuxState {
 	bool key[256];
 	LinuxGameCode gameCode;
 	s32 loadCounter;
+	GameMemory gameMemory;
+	GameInput gameInput;
+	GameOffscreenBuffer gameBuffer;
 };
 
 internal void
@@ -167,6 +170,16 @@ linuxDrawPattern(modified XImage* b, int xOffset, int yOffset) {
 }
 
 internal void
+linuxUpdateGameBuffer(out GameOffscreenBuffer* gameBuffer,
+		in XImage* xBuffer) {
+	gameBuffer->bitmapMemory = xBuffer->data;
+	gameBuffer->width = xBuffer->width;
+	gameBuffer->height = xBuffer->height;
+	gameBuffer->pitch = xBuffer->bytes_per_line;
+	gameBuffer->bytesPerPixel = 4;
+}
+
+internal void
 linuxResizeBackBuffer(modified LinuxState* state, int width, int height) {
 	state->backBuffer->width = width;
 	state->backBuffer->height = height;
@@ -179,10 +192,34 @@ linuxResizeBackBuffer(modified LinuxState* state, int width, int height) {
 	state->backBuffer->bytes_per_line = 4 * width;
 	state->winWidth = width;
 	state->winHeight = height;
+	linuxUpdateGameBuffer(&state->gameBuffer, state->backBuffer);
+}
+
+internal bool
+linuxInitGameMemory(out GameMemory* memory) {
+	memory->permanentStorageSize = MEGABYTES(4);
+	memory->transientStorageSize = MEGABYTES(16);
+	memory->permanentStorage = calloc(1, memory->permanentStorageSize);
+	memory->transientStorage = calloc(1, memory->transientStorageSize);
+	if (!memory->permanentStorage || !memory->transientStorage) {
+		free(memory->permanentStorage);
+		free(memory->transientStorage);
+		return false;
+	}
+	return true;
+}
+
+internal bool
+linuxInitGameInput(out GameInput* input) {
+	//TODO
+	return false;
 }
 
 internal bool
 linuxInitState(out LinuxState* state) {
+	if (!linuxInitGameMemory(&state->gameMemory)) {
+		linuxErrorMessage("Could not allocate game memory.");
+	}
 	char* dir = linuxGetExecutableDirectory();
 	chdir(dir);
 	free(dir);
@@ -308,17 +345,18 @@ main(int argc, char const* const* argv) {
 		if (state.key[116]) state.yOffset += speed;
 		if (state.key[113]) state.xOffset -= speed;
 		if (state.key[114]) state.xOffset += speed;
-		state.gameCode.updateAndRender(0, 0, 0, 0, 0);
-		linuxDrawPattern(state.backBuffer,
-			state.xOffset, state.yOffset);		
+		state.gameCode.updateAndRender(0.f, 4,
+			&state.gameMemory, &state.gameInput,
+			&state.gameBuffer);
 		linuxRedrawWindow(&state);
 		
 		struct timespec endCounter;
 		clock_gettime(CLOCK_MONOTONIC, &endCounter);
 		u64 endCycleCount = __rdtsc();
 		f32 timeElapsed = ComputeClockInterval(lastCounter, endCounter);
-		printf("%3.2fms/f, %3.1ff/s, %2.2fMc/f\n", timeElapsed*1e3f, 1.f/timeElapsed,
-			(endCycleCount - lastCycleCount) * 1e-6f );
+		printf("%3.2fms/f, %3.1ff/s, %2.2fMc/f\n",
+			timeElapsed*1e3f, 1.f/timeElapsed,
+			(endCycleCount - lastCycleCount) * 1e-6f);
 		lastCycleCount = endCycleCount;
 		lastCounter = endCounter;
 	}

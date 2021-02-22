@@ -98,7 +98,8 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 			ci->rectCount = 1;
 			ci->rects = r;
 			r->w = r->h = 100;
-			r->p = V2(buffer->width/6.f + 10*rand(state), i*r->h + r->h/2);
+			r->p = V2(buffer->width/4.f + 10*rand(state),
+				buffer->height - i*r->h - r->h/2);
 			r->v = V2(0,0);
 			r->lastV = r->v;
 			r->angle = 0;
@@ -136,9 +137,9 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 
 	v2 keyboardAccel = {};
 	if (controller->up.endedDown)
-		keyboardAccel.y -= keyboardAccelScalar;
-	if (controller->down.endedDown)
 		keyboardAccel.y += keyboardAccelScalar;
+	if (controller->down.endedDown)
+		keyboardAccel.y -= keyboardAccelScalar;
 	if (controller->left.endedDown)
 		keyboardAccel.x += keyboardAccelScalar;
 	if (controller->right.endedDown)
@@ -161,7 +162,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 	}
 
 	state->physicsVariables.globalForce = {};
-	state->physicsVariables.globalAccel = V2(0,-1500.f);
+	state->physicsVariables.globalAccel = V2(0, +1500.f);
 	state->physicsVariables.globalAccel += keyboardAccel;
 
 	renderBackground(buffer, state->backgroundColour);

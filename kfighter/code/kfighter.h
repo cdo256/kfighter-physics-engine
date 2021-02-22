@@ -49,21 +49,21 @@ struct GameControllerInput {
 	GameStickState rStick;
 
 	union {
-	    GameButtonState buttons[12];
-	    struct {
-	        GameButtonState up;
-	        GameButtonState down;
-	        GameButtonState left;
-	        GameButtonState right;
-	        GameButtonState start;
-	        GameButtonState back;
-	        GameButtonState lShoulder;
-	        GameButtonState rShoulder;
-	        GameButtonState aButton;
-	        GameButtonState bButton;
-	        GameButtonState xButton;
-	        GameButtonState yButton;
-	    };
+		GameButtonState buttons[12];
+		struct {
+			GameButtonState up;
+			GameButtonState down;
+			GameButtonState left;
+			GameButtonState right;
+			GameButtonState start;
+			GameButtonState back;
+			GameButtonState lShoulder;
+			GameButtonState rShoulder;
+			GameButtonState aButton;
+			GameButtonState bButton;
+			GameButtonState xButton;
+			GameButtonState yButton;
+		};
 	};
 };
 
@@ -90,7 +90,7 @@ struct GameKeyState {
 	s8 halfTransitionCount : 6;
 	b8 endedDown : 1;
 	b8 seen : 1; //NOTE: This stays cleared until a key press or
-	             //release is seen
+				 //release is seen
 };
 
 //TODO: Do we have the problem of thinking that keys are still down
@@ -114,13 +114,13 @@ struct GameMemory {
 	void* transientStorage;
 };
 
-#define GAME_UPDATE_AND_RENDER(name)                         \
-	void name(                                           \
-	    f32 dt,                                          \
-	    u32 seed,                                        \
-	    modified_descendent GameMemory* memory,          \
-	    in GameInput* input,                             \
-	    modified_descendent GameOffscreenBuffer* buffer)
+#define GAME_UPDATE_AND_RENDER(name)						 \
+	void name(										   \
+		f32 dt,										  \
+		u32 seed,										\
+		modified_descendent GameMemory* memory,		  \
+		in GameInput* input,							 \
+		modified_descendent GameOffscreenBuffer* buffer)
 typedef GAME_UPDATE_AND_RENDER(game_update_and_render);
 GAME_UPDATE_AND_RENDER(gameUpdateAndRenderStub) {}
 //global game_update_and_render* gameUpdateAndRender_ = gameUpdateAndRenderStub;
@@ -149,37 +149,37 @@ struct PhysicsVariables {
 	v2 globalAccel;
 };
 
-#define DECLARE_ARRAY(type,name,max)                 \
-	static_storage const int                     \
-	name##MaxCount = (max);                      \
-	int name##Count;                             \
+#define DECLARE_ARRAY(type,name,max)				 \
+	static_storage const int					 \
+	name##MaxCount = (max);					  \
+	int name##Count;							 \
 	type name##Arr[max];
 
-#define ARRAY_APPEND_CHECK(arr)                      \
+#define ARRAY_APPEND_CHECK(arr)					  \
 	((arr##Count)<(arr##MaxCount)-1)
 
-#define ARRAY_SIZE_CHECK(arr)                        \
+#define ARRAY_SIZE_CHECK(arr)						\
 	((arr##Count)<(arr##MaxCount))
 
-#define APPEND_TO_ARRAY_WITH_FAIL(arr,val) {         \
-	    assert((arr##Count)<(arr##MaxCount)-1);  \
-	    (arr##Arr)[(arr##Count)++] = (val);      \
+#define APPEND_TO_ARRAY_WITH_FAIL(arr,val) {		 \
+		assert((arr##Count)<(arr##MaxCount)-1);  \
+		(arr##Arr)[(arr##Count)++] = (val);	  \
 	}
 
-#define APPEND_TO_ARRAY_WITH_CHECK(arr,val)          \
-	if ((arr##Count)<(arr##MaxCount)-1)          \
-	    (arr##Arr)[(arr##Count)++] = (val);
+#define APPEND_TO_ARRAY_WITH_CHECK(arr,val)		  \
+	if ((arr##Count)<(arr##MaxCount)-1)		  \
+		(arr##Arr)[(arr##Count)++] = (val);
 
-#define APPEND_TO_ARRAY_WITHOUT_CHECK(arr,val)       \
+#define APPEND_TO_ARRAY_WITHOUT_CHECK(arr,val)	   \
 	(arr##Arr)[(arr##Count)++] = (val);
 
-#define GET_NEXT_ARRAY_ELEM_WITH_FAIL(arr) (         \
-	    assert((arr##Count)<(arr##MaxCount)-1),  \
-	    &(arr##Arr)[(arr##Count)++])
+#define GET_NEXT_ARRAY_ELEM_WITH_FAIL(arr) (		 \
+		assert((arr##Count)<(arr##MaxCount)-1),  \
+		&(arr##Arr)[(arr##Count)++])
 
-#define GET_NEXT_ARRAY_ELEM_WITH_CHECK(arr) (        \
-	    ((arr##Count)<(arr##MaxCount)-1) ?       \
-	    &(arr##Arr)[(arr##Count)++] : (void*)0)
+#define GET_NEXT_ARRAY_ELEM_WITH_CHECK(arr) (		\
+		((arr##Count)<(arr##MaxCount)-1) ?	   \
+		&(arr##Arr)[(arr##Count)++] : (void*)0)
 
 struct GameState {
 	b32 isInitialised;

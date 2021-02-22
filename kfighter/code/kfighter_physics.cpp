@@ -19,12 +19,12 @@ internal inline void
 computeMassAndMomentOfInertia(
 	modified PhysicsRect* r, f32 density) {
 	if (r->fixed) {
-	    r->mass = FLT_MAX;
-	    r->momentOfInertia = FLT_MAX;
+		r->mass = FLT_MAX;
+		r->momentOfInertia = FLT_MAX;
 	} else {
-	    r->mass = r->w*r->h*density;
-	    r->momentOfInertia = r->mass *
-	        (sqr(r->w)+sqr(r->h))/12.f;
+		r->mass = r->w*r->h*density;
+		r->momentOfInertia = r->mass *
+			(sqr(r->w)+sqr(r->h))/12.f;
 	}
 }
 
@@ -38,17 +38,17 @@ internal void applyImpulsePair(
 	normal = norm(normal);
 	v2 rel1 = pos - r1->p;
 	v2 rel2 = pos - r2->p;
-	
+
 	//TODO: Is there a better way of doing this that doesn't require
 	//checking whether every object is fixed loads of times?
 	if (!r1->fixed) {
-	    r1->v += impulse * normal / r1->mass ;
-	    r1->angularVel += impulse * cross(rel1, normal) / r1->momentOfInertia;
+		r1->v += impulse * normal / r1->mass ;
+		r1->angularVel += impulse * cross(rel1, normal) / r1->momentOfInertia;
 	}
 	if (!r2->fixed) {
-	    r2->v += impulse * (-normal) / r2->mass;
-	    r2->angularVel += impulse * cross(rel2, -normal) / r2->momentOfInertia;
-	} 
+		r2->v += impulse * (-normal) / r2->mass;
+		r2->angularVel += impulse * cross(rel2, -normal) / r2->momentOfInertia;
+	}
 }
 
 internal void
@@ -58,54 +58,54 @@ resolveCollision(
 	modified_descendent CollisionManifold* manifold) {
 
 	for (int i = 0; i < manifold->count; i++) {
-	    v2 pos = manifold->pos[i];
-	    v2 normal = manifold->normal;
-	    f32 depth = manifold->depth;
-	    PhysicsRect* r1 = manifold->r1;
-	    PhysicsRect* r2 = manifold->r2;
+		v2 pos = manifold->pos[i];
+		v2 normal = manifold->normal;
+		f32 depth = manifold->depth;
+		PhysicsRect* r1 = manifold->r1;
+		PhysicsRect* r2 = manifold->r2;
 
-	    normal = norm(normal);
-	    v2 rel1 = pos - r1->p;
-	    v2 rel2 = pos - r2->p;
-	    
-	    bool fixed = (r1->fixed || r2->fixed);
-	    if (!r1->fixed) r1->p += depth*normal / (fixed ? 1.f : 2.f);
-	    if (!r2->fixed) r2->p -= depth*normal / (fixed ? 1.f : 2.f); 
+		normal = norm(normal);
+		v2 rel1 = pos - r1->p;
+		v2 rel2 = pos - r2->p;
 
-	    f32 moment1 = (r1->fixed) ? 0 :
-	        sqr(cross(rel1, normal))/r1->momentOfInertia;
-	    f32 moment2 = (r2->fixed) ? 0 :
-	        sqr(cross(rel2, -normal))/r2->momentOfInertia;
-	    f32 momentSum = moment1 + moment2;
-	    f32 invMassSum = 0;
-	    if (!r1->fixed) invMassSum += 1.f/r1->mass;
-	    if (!r2->fixed) invMassSum += 1.f/r2->mass;
-	    f32 effectiveMass = -1.f/(momentSum+invMassSum);
-	    f32 linVel1 = dot(normal, r1->v + dt * pv->globalAccel);
-	    f32 linVel2 = dot(-normal, r2->v + dt * pv->globalAccel);
-	    f32 angVel1 = cross(rel1, normal)*r1->angularVel;
-	    f32 angVel2 = cross(rel2, -normal)*r2->angularVel;
-	    f32 impulse = effectiveMass * (linVel1 + linVel2 + angVel1 + angVel2);
+		bool fixed = (r1->fixed || r2->fixed);
+		if (!r1->fixed) r1->p += depth*normal / (fixed ? 1.f : 2.f);
+		if (!r2->fixed) r2->p -= depth*normal / (fixed ? 1.f : 2.f);
 
-	    if (impulse >= 0) applyImpulsePair(normal, impulse, pos, r1, r2);
-	    if (pv->enableFriction && r1->enableFriction && r2->enableFriction) {
-	        v2 tangent = perp(normal);
-	        f32 moment1 = (r1->fixed) ? 0 :
-	            sqr(cross(rel1, tangent))/r1->momentOfInertia;
-	        f32 moment2 = (r2->fixed) ? 0 :
-	            sqr(cross(rel2, -tangent))/r2->momentOfInertia;
-	        f32 momentSum = moment1 + moment2;
-	        f32 invMassSum = 0;
-	        if (!r1->fixed) invMassSum += 1.f/r1->mass;
-	        if (!r2->fixed) invMassSum += 1.f/r2->mass;
-	        f32 effectiveMass = -1.f/(momentSum+invMassSum);
-	        f32 linVel1 = dot(tangent, r1->v + dt * pv->globalAccel);
-	        f32 linVel2 = dot(-tangent, r2->v + dt * pv->globalAccel);
-	        f32 angVel1 = cross(rel1, tangent)*r1->angularVel;
-	        f32 angVel2 = cross(rel2, -tangent)*r2->angularVel;
-	        f32 impulse = effectiveMass * (linVel1 + linVel2 + angVel1 + angVel2);
-	        applyImpulsePair(tangent, pv->frictionCoef*impulse, pos, r1, r2);
-	    }
+		f32 moment1 = (r1->fixed) ? 0 :
+			sqr(cross(rel1, normal))/r1->momentOfInertia;
+		f32 moment2 = (r2->fixed) ? 0 :
+			sqr(cross(rel2, -normal))/r2->momentOfInertia;
+		f32 momentSum = moment1 + moment2;
+		f32 invMassSum = 0;
+		if (!r1->fixed) invMassSum += 1.f/r1->mass;
+		if (!r2->fixed) invMassSum += 1.f/r2->mass;
+		f32 effectiveMass = -1.f/(momentSum+invMassSum);
+		f32 linVel1 = dot(normal, r1->v + dt * pv->globalAccel);
+		f32 linVel2 = dot(-normal, r2->v + dt * pv->globalAccel);
+		f32 angVel1 = cross(rel1, normal)*r1->angularVel;
+		f32 angVel2 = cross(rel2, -normal)*r2->angularVel;
+		f32 impulse = effectiveMass * (linVel1 + linVel2 + angVel1 + angVel2);
+
+		if (impulse >= 0) applyImpulsePair(normal, impulse, pos, r1, r2);
+		if (pv->enableFriction && r1->enableFriction && r2->enableFriction) {
+			v2 tangent = perp(normal);
+			f32 moment1 = (r1->fixed) ? 0 :
+				sqr(cross(rel1, tangent))/r1->momentOfInertia;
+			f32 moment2 = (r2->fixed) ? 0 :
+				sqr(cross(rel2, -tangent))/r2->momentOfInertia;
+			f32 momentSum = moment1 + moment2;
+			f32 invMassSum = 0;
+			if (!r1->fixed) invMassSum += 1.f/r1->mass;
+			if (!r2->fixed) invMassSum += 1.f/r2->mass;
+			f32 effectiveMass = -1.f/(momentSum+invMassSum);
+			f32 linVel1 = dot(tangent, r1->v + dt * pv->globalAccel);
+			f32 linVel2 = dot(-tangent, r2->v + dt * pv->globalAccel);
+			f32 angVel1 = cross(rel1, tangent)*r1->angularVel;
+			f32 angVel2 = cross(rel2, -tangent)*r2->angularVel;
+			f32 impulse = effectiveMass * (linVel1 + linVel2 + angVel1 + angVel2);
+			applyImpulsePair(tangent, pv->frictionCoef*impulse, pos, r1, r2);
+		}
 	}
 }
 
@@ -125,52 +125,52 @@ resolveJointConstraint(
 
 	// --- MOTOR ---
 	if (pv->enableMotor && j->enableMotor) {
-	    f32 targetAngVel = j->targetAngVel;
-	    f32 angImpulse = effectiveMass
-	        * (angVel - targetAngVel);
+		f32 targetAngVel = j->targetAngVel;
+		f32 angImpulse = effectiveMass
+			* (angVel - targetAngVel);
 
-	    if (pv->enablePIDJoints && j->enablePID) {
-	        //TODO: Tune these
-	        //TODO: Prevent integral windup:
-	        // https://en.wikipedia.org/wiki/Integral_windup
-	        //NOTE: Cranking up ki leads to some kung-fu-like results
-	        f32 kp=300.f,ki=10000.f,kd=0;
-	        //f32 kp=300000.f,ki=5000.f,kd=1000.f;
-	        //f32 kp=70000.f,ki=2000.f,kd=10.f;
-	        f32 error = j->targetAngle - theta;
-	        f32 integral = j->pidIntegralTerm += dt*error;
+		if (pv->enablePIDJoints && j->enablePID) {
+			//TODO: Tune these
+			//TODO: Prevent integral windup:
+			// https://en.wikipedia.org/wiki/Integral_windup
+			//NOTE: Cranking up ki leads to some kung-fu-like results
+			f32 kp=300.f,ki=10000.f,kd=0;
+			//f32 kp=300000.f,ki=5000.f,kd=1000.f;
+			//f32 kp=70000.f,ki=2000.f,kd=10.f;
+			f32 error = j->targetAngle - theta;
+			f32 integral = j->pidIntegralTerm += dt*error;
 
-	        //NOTE: Cap integral to prevent jittering from starting after a while
-	        //integral = bound(integral, -0.01f, 0.01f);
+			//NOTE: Cap integral to prevent jittering from starting after a while
+			//integral = bound(integral, -0.01f, 0.01f);
 
-	        f32 derivative = (error - j->pidLastError)/dt;
-	        angImpulse = kp*error + ki*integral + kd*derivative;
-	        j->pidLastError = error;
+			f32 derivative = (error - j->pidLastError)/dt;
+			angImpulse = kp*error + ki*integral + kd*derivative;
+			j->pidLastError = error;
 
-	        /*
-	        j->targetAngVel = 0.01f/dt*error;
-	        j->targetAngVel -= 0.9f*angVel;
-	        j->targetAngVel += 0.f*j->pidIntegralTerm;
-	        */
-	    }
+			/*
+			j->targetAngVel = 0.01f/dt*error;
+			j->targetAngVel -= 0.9f*angVel;
+			j->targetAngVel += 0.f*j->pidIntegralTerm;
+			*/
+		}
 
-	    f32 maxImpulse = 10000000.f;//pv->maxMotorTorque*dt;
-	    angImpulse = bound(angImpulse, -maxImpulse, maxImpulse);
-	    if (!r1->fixed) r1->angularVel += angImpulse / r1->momentOfInertia;
-	    if (!r2->fixed) r2->angularVel -= angImpulse / r2->momentOfInertia;
+		f32 maxImpulse = 10000000.f;//pv->maxMotorTorque*dt;
+		angImpulse = bound(angImpulse, -maxImpulse, maxImpulse);
+		if (!r1->fixed) r1->angularVel += angImpulse / r1->momentOfInertia;
+		if (!r2->fixed) r2->angularVel -= angImpulse / r2->momentOfInertia;
 	}
 
 	// --- JOINT FRICTION ---
 	f32 effectiveMomentOfInertia = -1.f /
-	    (1.f/r1->momentOfInertia + 1.f/r2->momentOfInertia);
+		(1.f/r1->momentOfInertia + 1.f/r2->momentOfInertia);
 	f32 angImpulse = effectiveMomentOfInertia * angVel;
 
 	if (!r1->fixed)
-	    r1->angularVel +=
-	        pv->jointFrictionCoef * angImpulse / r1->momentOfInertia;
+		r1->angularVel +=
+			pv->jointFrictionCoef * angImpulse / r1->momentOfInertia;
 	if (!r2->fixed)
-	    r2->angularVel -=
-	        pv->jointFrictionCoef * angImpulse / r2->momentOfInertia;
+		r2->angularVel -=
+			pv->jointFrictionCoef * angImpulse / r2->momentOfInertia;
 
 	// --- VELOCITY RESOLUTION ---
 	v2 rel1 = rotate(j->relPos1, r1->angle);
@@ -182,7 +182,7 @@ resolveJointConstraint(
 	// impulse = k * (J q' + bias)
 	// Where
 	//   Bias b = beta / h * C
-	//   Bias coef beta in [0,1] 
+	//   Bias coef beta in [0,1]
 	//   Factor k = -(J M^(-1) J^T)^(-1)
 	//   Jacobi J = [deltaP | jacobiAngle1 | -deltaP | jacobiAngle2]
 	//   Inertial matrix M = diag [m1 m1 I1 m2 m2 I2]
@@ -195,15 +195,15 @@ resolveJointConstraint(
 	f32 jacobiAngle2 = -cross(rel2, deltaP);
 	f32 linearThingy = sqrmag(deltaP) * (1.f / r1->mass + 1.f / r2->mass);
 	f32 rotationalThingy =
-	    + sqr(jacobiAngle1) / r1->momentOfInertia
-	    + sqr(jacobiAngle2) / r2->momentOfInertia;
+		+ sqr(jacobiAngle1) / r1->momentOfInertia
+		+ sqr(jacobiAngle2) / r2->momentOfInertia;
 
 	f32 effectiveMass2 = (linearThingy + rotationalThingy == 0 ? 0 :
-	         -1.f/(linearThingy + rotationalThingy));
+			 -1.f/(linearThingy + rotationalThingy));
 
 	f32 newVel = dot(deltaP, r1->v - r2->v)
-	    + jacobiAngle1 * r1->angularVel
-	    + jacobiAngle2 * r2->angularVel;
+		+ jacobiAngle1 * r1->angularVel
+		+ jacobiAngle2 * r2->angularVel;
 	f32 bias = pv->jointPositionalBiasCoef / dt * 0.5f * sqrmag(deltaP);
 	f32 impulseCoef = effectiveMass2 * (newVel + bias);
 
@@ -212,12 +212,12 @@ resolveJointConstraint(
 	f32 rotDelta1 =  impulseCoef * jacobiAngle1 / r1->momentOfInertia;
 	f32 rotDelta2 = +impulseCoef * jacobiAngle2 / r2->momentOfInertia;
 	if (!r1->fixed) {
-	    r1->v += linDeltaV1;
-	    r1->angularVel += rotDelta1;
+		r1->v += linDeltaV1;
+		r1->angularVel += rotDelta1;
 	}
 	if (!r2->fixed) {
-	    r2->v += linDeltaV2;
-	    r2->angularVel += rotDelta2;
+		r2->v += linDeltaV2;
+		r2->angularVel += rotDelta2;
 	}
 
 	// --- ROTATION RESOLUTION ---
@@ -226,24 +226,24 @@ resolveJointConstraint(
 	f32 rotBias = rotBiasCoef / dt * theta;
 	angImpulse = effectiveMass * (angVel + rotBias);
 	if (pv->enableRotationalConstraints) {
-	    if ((theta < j->minTheta && angVel < 0) ||
-	        (theta > j->maxTheta && angVel > 0)) {
+		if ((theta < j->minTheta && angVel < 0) ||
+			(theta > j->maxTheta && angVel > 0)) {
 
-	        if (!r1->fixed) {
-	            r1->angularVel += angImpulse / r1->momentOfInertia;
-	        }
-	        if (!r2->fixed) {
-	            r2->angularVel -= angImpulse / r2->momentOfInertia;
-	        }
-	    }
+			if (!r1->fixed) {
+				r1->angularVel += angImpulse / r1->momentOfInertia;
+			}
+			if (!r2->fixed) {
+				r2->angularVel -= angImpulse / r2->momentOfInertia;
+			}
+		}
 
-	    f32 thetaDiff = bound(theta,j->minTheta,j->maxTheta) - theta;
+		f32 thetaDiff = bound(theta,j->minTheta,j->maxTheta) - theta;
 
-	    //NOTE: Debug code, but shouldn't make a difference if left in
-	    if (thetaDiff > 1.f)
-	        normAngle(theta);
+		//NOTE: Debug code, but shouldn't make a difference if left in
+		if (thetaDiff > 1.f)
+			normAngle(theta);
 
-	    if (!r1->fixed) r1->angle += thetaDiff * (r2->fixed ? 1.f : 0.5f);
-	    if (!r2->fixed) r2->angle -= thetaDiff * (r1->fixed ? 1.f : 0.5f);
+		if (!r1->fixed) r1->angle += thetaDiff * (r2->fixed ? 1.f : 0.5f);
+		if (!r2->fixed) r2->angle -= thetaDiff * (r1->fixed ? 1.f : 0.5f);
 	}
 }

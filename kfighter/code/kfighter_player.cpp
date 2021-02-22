@@ -18,52 +18,52 @@ internal void makePlayer(
 	f32 pY = rand(state)*(buffer->height-2*margin) + margin;
 	for (int i = 0; i < ci->rectCount; i++) {
 		r = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->rect);
-	    r->fixed = false;
-	    r->enableFriction = true;
-	    r->p.x = pX + (rand(state)-.5f)*50.f;
-	    r->p.y = pY + (rand(state)-.5f)*50.f;
-	    r->v.x = (rand(state)-0.5f)*20.f;
-	    r->v.y = (rand(state)-0.5f)*20.f;
-	    r->lastV = r->v;
-	    r->angle = (rand(state)*2*pi);
-	    r->angularVel = (rand(state)*pi/4.f);
-	    if (pl == &state->playerArr[0]) {
-	        r->colour = 0x00FF0000;
-	    } else {
-	        r->colour = 0x000000FF;
-	    }
+		r->fixed = false;
+		r->enableFriction = true;
+		r->p.x = pX + (rand(state)-.5f)*50.f;
+		r->p.y = pY + (rand(state)-.5f)*50.f;
+		r->v.x = (rand(state)-0.5f)*20.f;
+		r->v.y = (rand(state)-0.5f)*20.f;
+		r->lastV = r->v;
+		r->angle = (rand(state)*2*pi);
+		r->angularVel = (rand(state)*pi/4.f);
+		if (pl == &state->playerArr[0]) {
+			r->colour = 0x00FF0000;
+		} else {
+			r->colour = 0x000000FF;
+		}
 
-	    if (i == 0) { //head
-	        r->w = 60.f;
-	        r->h = 60.f;
-	    } else { //all others
-	        r->w = 20.f;
-	        r->h = 90.f;
+		if (i == 0) { //head
+			r->w = 60.f;
+			r->h = 60.f;
+		} else { //all others
+			r->w = 20.f;
+			r->h = 90.f;
 
-	        if (i == 3 || i == 4 || i == 7 || i == 8) {
-	            if (pl == &state->playerArr[0]) {
-	                r->colour = 0x00B00000;
-	            } else {
-	                r->colour = 0x000000B0;
-	            }
-	        }
+			if (i == 3 || i == 4 || i == 7 || i == 8) {
+				if (pl == &state->playerArr[0]) {
+					r->colour = 0x00B00000;
+				} else {
+					r->colour = 0x000000B0;
+				}
+			}
 
-	        //  0 - head
-	        //  1 - chest
-	        //  2 - abdomin
-	        //  3 - left bicep
-	        //  4 - left forearm
-	        //  5 - right bicep
-	        //  6 - right forearm
-	        //  7 - left thigh
-	        //  8 - left shin
-	        //  9 - right thigh
-	        // 10 - right shin
-	    }
+			//  0 - head
+			//  1 - chest
+			//  2 - abdomin
+			//  3 - left bicep
+			//  4 - left forearm
+			//  5 - right bicep
+			//  6 - right forearm
+			//  7 - left thigh
+			//  8 - left shin
+			//  9 - right thigh
+			// 10 - right shin
+		}
 
-	    r->mass = r->w*r->h*0.01f;
-	    r->momentOfInertia = r->mass *
-	        (sqr(r->w)+sqr(r->h))/12.f;
+		r->mass = r->w*r->h*0.01f;
+		r->momentOfInertia = r->mass *
+			(sqr(r->w)+sqr(r->h))/12.f;
 	}
 
 	// --- MAKE JOINTS ---
@@ -73,34 +73,34 @@ internal void makePlayer(
 	assert(ARRAY_SIZE_CHECK(state->joint));
 
 #define MAKE_JOINT(joint, part1, part2, min, max, vOffsetFactor) \
-	{                                                            \
-	    PhysicsJoint* j = &pl->joints->joint;                    \
-	    j->r1 = &seg->part1;                                     \
-	    j->r2 = &seg->part2;                                     \
-	    j->relPos1 = -V2(                                        \
-	        0,                                                   \
-	        j->r1->h/2*(vOffsetFactor) - j->r1->w/2);            \
-	    j->relPos2 = +V2(0, j->r2->h/2 - j->r2->w/2);            \
-	    j->minTheta = (min)*pi;                                  \
-	    j->maxTheta = (max)*pi;                                  \
-	    j->targetAngVel = 0;                                     \
-	    j->targetAngle = 0;                                      \
-	    j->pidIntegralTerm = 0;                                  \
-	    j->enableMotor = false;                                  \
-	    j->enablePID = false;                                    \
-	    j->enable = true;                                        \
+	{															\
+		PhysicsJoint* j = &pl->joints->joint;					\
+		j->r1 = &seg->part1;									 \
+		j->r2 = &seg->part2;									 \
+		j->relPos1 = -V2(										\
+			0,												   \
+			j->r1->h/2*(vOffsetFactor) - j->r1->w/2);			\
+		j->relPos2 = +V2(0, j->r2->h/2 - j->r2->w/2);			\
+		j->minTheta = (min)*pi;								  \
+		j->maxTheta = (max)*pi;								  \
+		j->targetAngVel = 0;									 \
+		j->targetAngle = 0;									  \
+		j->pidIntegralTerm = 0;								  \
+		j->enableMotor = false;								  \
+		j->enablePID = false;									\
+		j->enable = true;										\
 	}
 
-	MAKE_JOINT(neck,      head,    chest,    -0.30f, 0.40f, 5.f/3.f);
-	MAKE_JOINT(back,      chest,   abdomen,  -0.05f, 0.20f, 1.f);
+	MAKE_JOINT(neck,	  head,	chest,	-0.30f, 0.40f, 5.f/3.f);
+	MAKE_JOINT(back,	  chest,   abdomen,  -0.05f, 0.20f, 1.f);
 	MAKE_JOINT(lShoulder, chest,   lBicep,   -0.70f, 0.90f, -0.0f);
-	MAKE_JOINT(lElbow,    lBicep,  lForearm, -0.00f, 0.80f, 1.f);
+	MAKE_JOINT(lElbow,	lBicep,  lForearm, -0.00f, 0.80f, 1.f);
 	MAKE_JOINT(rShoulder, chest,   rBicep,   -0.70f, 0.90f, -0.0f);
-	MAKE_JOINT(rElbow,    rBicep,  rForearm, -0.00f, 0.80f, 1.f);
-	MAKE_JOINT(lHip,      abdomen, lThigh,   -0.30f, 0.60f, 1.f);
-	MAKE_JOINT(lKnee,     lThigh,  lShin,    -0.70f, 0.00f, 1.f);
-	MAKE_JOINT(rHip,      abdomen, rThigh,   -0.30f, 0.60f, 1.f);
-	MAKE_JOINT(rKnee,     rThigh,  rShin,    -0.70f, 0.00f, 1.f);
+	MAKE_JOINT(rElbow,	rBicep,  rForearm, -0.00f, 0.80f, 1.f);
+	MAKE_JOINT(lHip,	  abdomen, lThigh,   -0.30f, 0.60f, 1.f);
+	MAKE_JOINT(lKnee,	 lThigh,  lShin,	-0.70f, 0.00f, 1.f);
+	MAKE_JOINT(rHip,	  abdomen, rThigh,   -0.30f, 0.60f, 1.f);
+	MAKE_JOINT(rKnee,	 rThigh,  rShin,	-0.70f, 0.00f, 1.f);
 
 #undef MAKE_JOINT
 
@@ -146,15 +146,15 @@ internal void makePlayerPoses(modified GameState* state) {
 
 	pose = &state->poseArr[PLAYER_POSE_DEFAULT];
 	for (int i = 0; i < playerJointCount; i++) {
-	    pose->joints[i].angle = 0.f;
-	    pose->joints[i].applicationFactor = 1.f;
+		pose->joints[i].angle = 0.f;
+		pose->joints[i].applicationFactor = 1.f;
 	}
 
 	pose = &state->poseArr[PLAYER_POSE_BALL];
 	Player* pl = &state->playerArr[0];
 	for (int i = 0; i < playerJointCount; i++) {
-	    pose->joints[i].angle = pl->joints->joints[i].maxTheta;
-	    pose->joints[i].applicationFactor = 1.f;
+		pose->joints[i].angle = pl->joints->joints[i].maxTheta;
+		pose->joints[i].applicationFactor = 1.f;
 	}
 	pose->lShoulder.angle = 0.1f*pi;
 	pose->rShoulder.angle = 0.1f*pi;
@@ -163,7 +163,7 @@ internal void makePlayerPoses(modified GameState* state) {
 
 	pose = &state->poseArr[PLAYER_POSE_READY];
 	for (int i = 0; i < playerJointCount; i++) {
-	    pose->joints[i].applicationFactor = 1.f;
+		pose->joints[i].applicationFactor = 1.f;
 	}
 	pose->back.angle = 0.f;
 	pose->neck.angle = 0.f;
@@ -228,7 +228,7 @@ internal void makePlayerPoses(modified GameState* state) {
 
 	pose = &state->poseArr[PLAYER_POSE_RUN_L_PASS];
 	for (int i = 0; i < playerJointCount; i++) {
-	    pose->joints[i].applicationFactor = 0.5f;
+		pose->joints[i].applicationFactor = 0.5f;
 	}
 	pose->back.angle = pi/12.f;
 	pose->neck.angle = 0;
@@ -243,7 +243,7 @@ internal void makePlayerPoses(modified GameState* state) {
 
 	pose = &state->poseArr[PLAYER_POSE_RUN_L_REACH];
 	for (int i = 0; i < playerJointCount; i++) {
-	    pose->joints[i].applicationFactor = 0.5f;
+		pose->joints[i].applicationFactor = 0.5f;
 	}
 	pose->back.angle = 0;
 	pose->neck.angle = 0;
@@ -257,18 +257,18 @@ internal void makePlayerPoses(modified GameState* state) {
 	pose->rKnee.angle = -pi/3.f;
 
 	lrFlipPlayerPose(state->poseArr,
-	                 PLAYER_POSE_RUN_L_PASS,
-	                 PLAYER_POSE_RUN_R_PASS);
+					 PLAYER_POSE_RUN_L_PASS,
+					 PLAYER_POSE_RUN_R_PASS);
 	lrFlipPlayerPose(state->poseArr,
-	                 PLAYER_POSE_RUN_L_REACH,
-	                 PLAYER_POSE_RUN_R_REACH);
+					 PLAYER_POSE_RUN_L_REACH,
+					 PLAYER_POSE_RUN_R_REACH);
 
 
 	// --- WALKING POSES ---
 
 	pose = &state->poseArr[PLAYER_POSE_WALK_L_PASS];
 	for (int i = 0; i < playerJointCount; i++) {
-	    pose->joints[i].applicationFactor = 0.5f;
+		pose->joints[i].applicationFactor = 0.5f;
 	}
 	pose->back.angle = 0;
 	pose->neck.angle = 0;
@@ -283,7 +283,7 @@ internal void makePlayerPoses(modified GameState* state) {
 
 	pose = &state->poseArr[PLAYER_POSE_WALK_L_REACH];
 	for (int i = 0; i < playerJointCount; i++) {
-	    pose->joints[i].applicationFactor = 0.5f;
+		pose->joints[i].applicationFactor = 0.5f;
 	}
 	pose->back.angle = 0;
 	pose->neck.angle = 0;
@@ -297,11 +297,11 @@ internal void makePlayerPoses(modified GameState* state) {
 	pose->rKnee.angle = 0;
 
 	lrFlipPlayerPose(state->poseArr,
-	                 PLAYER_POSE_WALK_L_PASS,
-	                 PLAYER_POSE_WALK_R_PASS);
+					 PLAYER_POSE_WALK_L_PASS,
+					 PLAYER_POSE_WALK_R_PASS);
 	lrFlipPlayerPose(state->poseArr,
-	                 PLAYER_POSE_WALK_L_REACH,
-	                 PLAYER_POSE_WALK_R_REACH);
+					 PLAYER_POSE_WALK_L_REACH,
+					 PLAYER_POSE_WALK_R_REACH);
 }
 
 internal PoseJoint interpolateJoint(f32 t, in PoseJoint* j1, in PoseJoint* j2) {
@@ -334,20 +334,20 @@ updatePlayer(
 
 	// Match pose
 	if (~pl->currentPose) { // If matching a specific pose
-	    PlayerPose* pose = &poseArr[pl->currentPose];
-	    for (int i = 0; i < playerJointCount; i++) {
-	        f32 targetAngle = pose->joints[i].angle;
-	        PhysicsJoint* joint = &pl->joints->joints[i];
+		PlayerPose* pose = &poseArr[pl->currentPose];
+		for (int i = 0; i < playerJointCount; i++) {
+			f32 targetAngle = pose->joints[i].angle;
+			PhysicsJoint* joint = &pl->joints->joints[i];
 
-	        joint->targetAngle = targetAngle;
-	        joint->enablePID = true;
-	        joint->enableMotor = true;
-	    }
+			joint->targetAngle = targetAngle;
+			joint->enablePID = true;
+			joint->enableMotor = true;
+		}
 	} else {
-	    for (int i = 0; i < playerJointCount; i++) {
-	        PhysicsJoint* joint = &pl->joints->joints[i];
-	        joint->enablePID = false;
-	        joint->enableMotor = false;
-	    }
+		for (int i = 0; i < playerJointCount; i++) {
+			PhysicsJoint* joint = &pl->joints->joints[i];
+			joint->enablePID = false;
+			joint->enableMotor = false;
+		}
 	}
 }

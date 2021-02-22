@@ -6,33 +6,33 @@ global const int playerJointCount = 10;
 union PlayerSegments {
 	PhysicsRect segments[playerSegmentCount];
 	struct {
-	    PhysicsRect head;
-	    PhysicsRect chest;
-	    PhysicsRect abdomen;
-	    PhysicsRect lBicep;
-	    PhysicsRect lForearm;
-	    PhysicsRect rBicep;
-	    PhysicsRect rForearm;
-	    PhysicsRect lThigh;
-	    PhysicsRect lShin;
-	    PhysicsRect rThigh;
-	    PhysicsRect rShin;
+		PhysicsRect head;
+		PhysicsRect chest;
+		PhysicsRect abdomen;
+		PhysicsRect lBicep;
+		PhysicsRect lForearm;
+		PhysicsRect rBicep;
+		PhysicsRect rForearm;
+		PhysicsRect lThigh;
+		PhysicsRect lShin;
+		PhysicsRect rThigh;
+		PhysicsRect rShin;
 	};
 };
 
 union PlayerJoints {
 	PhysicsJoint joints[playerJointCount];
 	struct {
-	    PhysicsJoint neck;
-	    PhysicsJoint back;
-	    PhysicsJoint lShoulder;
-	    PhysicsJoint lElbow;
-	    PhysicsJoint rShoulder;
-	    PhysicsJoint rElbow;
-	    PhysicsJoint lHip;
-	    PhysicsJoint lKnee;
-	    PhysicsJoint rHip;
-	    PhysicsJoint rKnee;
+		PhysicsJoint neck;
+		PhysicsJoint back;
+		PhysicsJoint lShoulder;
+		PhysicsJoint lElbow;
+		PhysicsJoint rShoulder;
+		PhysicsJoint rElbow;
+		PhysicsJoint lHip;
+		PhysicsJoint lKnee;
+		PhysicsJoint rHip;
+		PhysicsJoint rKnee;
 	};
 };
 
@@ -61,19 +61,19 @@ enum PlayerPoses {
 
 struct PlayerPose {
 	union {
-	    PoseJoint joints[playerJointCount];
-	    struct {
-	        PoseJoint neck;
-	        PoseJoint back;
-	        PoseJoint lShoulder;
-	        PoseJoint lElbow;
-	        PoseJoint rShoulder;
-	        PoseJoint rElbow;
-	        PoseJoint lHip;
-	        PoseJoint lKnee;
-	        PoseJoint rHip;
-	        PoseJoint rKnee;
-	    };
+		PoseJoint joints[playerJointCount];
+		struct {
+			PoseJoint neck;
+			PoseJoint back;
+			PoseJoint lShoulder;
+			PoseJoint lElbow;
+			PoseJoint rShoulder;
+			PoseJoint rElbow;
+			PoseJoint lHip;
+			PoseJoint lKnee;
+			PoseJoint rHip;
+			PoseJoint rKnee;
+		};
 	};
 };
 

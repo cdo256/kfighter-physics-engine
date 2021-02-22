@@ -93,7 +93,7 @@ linuxCopyFile(char const* srcFilename, char const* dstFilename) {
 				}
 				if (readResult < 0) break;
 				ssize_t writeResult = write(dstFd, fileCopyBuffer, readResult);
-				if (writeResult != readResult) break; 
+				if (writeResult != readResult) break;
 			}
 			close(dstFd);
 		}
@@ -132,7 +132,7 @@ linuxLoadGameCode() {
 		linuxErrorMessage("Could not move file kfighter.so to kfighter_temp.so.");
 		exit(1);
 	}
-	
+
 	if (chmod("kfighter_temp.so", 0755) < 0) {
 		linuxErrorMessage("Could not set kfighter_temp.so file permissions.");
 		exit(1);
@@ -304,7 +304,7 @@ linuxHandleEvent(XEvent ev, modified LinuxState* state) {
 		bool isDown = (ev.type == KeyPress);
 		if (e.keycode < 256) {
 			state->key[e.keycode] = isDown;
-		} 
+		}
 	} break;
 	default: {
 		printf("Unrecognised message: %i\n", ev.type);
@@ -320,7 +320,7 @@ ComputeClockInterval(struct timespec start, struct timespec end) {
 int
 main(int argc, char const* const* argv) {
 	LinuxState state = {0};
-	
+
 	if (!linuxInitState(&state)) {
 		return 1;
 	}
@@ -349,7 +349,7 @@ main(int argc, char const* const* argv) {
 			&state.gameMemory, &state.gameInput,
 			&state.gameBuffer);
 		linuxRedrawWindow(&state);
-		
+
 		struct timespec endCounter;
 		clock_gettime(CLOCK_MONOTONIC, &endCounter);
 		u64 endCycleCount = __rdtsc();

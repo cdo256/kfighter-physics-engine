@@ -4,11 +4,11 @@ renderBackground(
 	u32 colour) {
 
 	for (u32 y = 0; y < buffer->height; y++) {
-	    u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;
-	    for (u32 x = 0; x < buffer->width; x++) {
-	        u8* pixel = row + buffer->bytesPerPixel * x;
-	        *((u32*)pixel) = colour;
-	    }
+		u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;
+		for (u32 x = 0; x < buffer->width; x++) {
+			u8* pixel = row + buffer->bytesPerPixel * x;
+			*((u32*)pixel) = colour;
+		}
 	}
 }
 
@@ -22,15 +22,15 @@ renderPoint(
 	size /= 2;
 
 	for (s32 y = max(0,yPos-size);
-	     y < min(yPos+size, (s32)buffer->height);
-	     y++) {
-	    u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;
-	    for (s32 x = max(0, xPos-size);
-	         x < min(xPos+size, (s32)buffer->width);
-	         x++) {
-	        u8* pixel = row + buffer->bytesPerPixel * x;
-	        *((u32*)pixel) = 0x00FFFFFF;
-	    }
+		 y < min(yPos+size, (s32)buffer->height);
+		 y++) {
+		u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;
+		for (s32 x = max(0, xPos-size);
+			 x < min(xPos+size, (s32)buffer->width);
+			 x++) {
+			u8* pixel = row + buffer->bytesPerPixel * x;
+			*((u32*)pixel) = 0x00FFFFFF;
+		}
 	}
 }
 
@@ -48,17 +48,17 @@ renderRectangle(
 	// Compute directions pointing inwards
 	v2 dirs[4];
 	for (int i=0;i<4;i++)
-	    dirs[i] = perp(verts[(i+1)%4] - verts[i]);
+		dirs[i] = perp(verts[(i+1)%4] - verts[i]);
 
 	int bottom = (int)buffer->height;
 	int top = 0;
 	int right = 0;
 	int left = (int)buffer->width;
 	for (int i=0;i<4;i++) {
-	    top = max(top,(int)verts[i].y);
-	    bottom = min(bottom,(int)verts[i].y);
-	    left = min(left,(int)verts[i].x);
-	    right = max(right,(int)verts[i].x);
+		top = max(top,(int)verts[i].y);
+		bottom = min(bottom,(int)verts[i].y);
+		left = min(left,(int)verts[i].x);
+		right = max(right,(int)verts[i].x);
 	}
 	top = bound(top,0,(int)buffer->height);
 	bottom = bound(bottom,0,(int)buffer->height);
@@ -66,32 +66,32 @@ renderRectangle(
 	right = bound(right,0,(int)buffer->width);
 
 	for (int y = bottom; y < top; y++) {
-	    u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;
-	    for (int x = left; x < right; x++) {
-	        u8* pixel = row + buffer->bytesPerPixel * x;
-	        v2 p = V2((f32)x,(f32)y);
-	        v2 topLeft = p - verts[1];
-	        v2 bottomRight = p - verts[3];
-	        if (dot(topLeft,dirs[0])>0 &&
-	            dot(topLeft,dirs[1])>0 &&
-	            dot(bottomRight,dirs[2])>0 &&
-	            dot(bottomRight,dirs[3])>0) {
+		u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;
+		for (int x = left; x < right; x++) {
+			u8* pixel = row + buffer->bytesPerPixel * x;
+			v2 p = V2((f32)x,(f32)y);
+			v2 topLeft = p - verts[1];
+			v2 bottomRight = p - verts[3];
+			if (dot(topLeft,dirs[0])>0 &&
+				dot(topLeft,dirs[1])>0 &&
+				dot(bottomRight,dirs[2])>0 &&
+				dot(bottomRight,dirs[3])>0) {
 
-	            *((u32*)pixel) = colour;
-	        }
-	    }
+				*((u32*)pixel) = colour;
+			}
+		}
 	}
 }
 
 internal void
 setPixel(modified_descendent GameOffscreenBuffer* buffer,
-	     int x, int y, u32 colour) {
+		 int x, int y, u32 colour) {
 
 	if (x < 0 || x >= (int)buffer->width ||
-	    y < 0 || y >= (int)buffer->height)
-	    return;
+		y < 0 || y >= (int)buffer->height)
+		return;
 
-	u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;  
+	u8* row = (u8*)buffer->bitmapMemory + buffer->pitch * y;
 	u8* pixel = row + buffer->bytesPerPixel * x;
 	*((u32*)pixel) = colour;
 }
@@ -109,10 +109,10 @@ renderLine(
 	int err = (dx>dy ? dx : -dy)/2, e2;
 
 	for(;;){
-	    setPixel(buffer,x0,y0,0x00FFFFFF);
-	    if (x0==x1 && y0==y1) break;
-	    e2 = err;
-	    if (e2 >-dx) { err -= dy; x0 += sx; }
-	    if (e2 < dy) { err += dx; y0 += sy; }
+		setPixel(buffer,x0,y0,0x00FFFFFF);
+		if (x0==x1 && y0==y1) break;
+		e2 = err;
+		if (e2 >-dx) { err -= dy; x0 += sx; }
+		if (e2 < dy) { err += dx; y0 += sy; }
 	}
 }

@@ -15,13 +15,13 @@
 // parameter is an array and is only read
 #define in_array
 
-// parameter is an index of arr and only the val at that index is read 
+// parameter is an index of arr and only the val at that index is read
 #define in_index(arr)
 
 //TODO: Do we need partial_out or complete_out to show how much of the
 //struct is filled? (eg. setPhysicsConstraints)
 
-// parameter is output only 
+// parameter is output only
 #define out
 
 // parameter is an array and is written to

@@ -62,7 +62,7 @@ inline f32 mag(v2 vec) {return sqrtf(sqrmag(vec));}
 inline v2 norm(v2 vec) {
 	f32 magnitude = mag(vec);
 	if (magnitude == 0)
-	    return V2(1,0);
+		return V2(1,0);
 	return vec/mag(vec);
 }
 inline v2 perp(v2 vec) {return V2(-vec.y,vec.x);}

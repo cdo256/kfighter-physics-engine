@@ -264,6 +264,8 @@ linuxInitState(out LinuxState* state) {
 		linuxErrorMessage("Could not create back buffer.");
 		return false;
 	}
+	linuxUpdateGameBuffer(&state->gameBuffer, state->backBuffer);
+
 	state->gameCode = linuxLoadGameCode();
 	state->loadCounter = 0;
 	return true;

@@ -192,7 +192,7 @@ win32ResizeDIBSection(
 	buffer->info.bmiHeader = {
 		sizeof(BITMAPINFOHEADER),
 		buffer->width,
-		buffer->height,
+		-buffer->height,
 		1,
 		bitsPerPixel,
 		BI_RGB

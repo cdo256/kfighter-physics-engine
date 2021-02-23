@@ -18,7 +18,8 @@ internal void makePlayer(
 	f32 pX = rand(state)*(buffer->width-2*margin) + margin;
 	f32 pY = rand(state)*(buffer->height-2*margin) + margin;
 	for (int i = 0; i < ci->rectCount; i++) {
-		r = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->rect);
+		assert(state->rectCount < ARRAY_COUNT(state->rectArr));
+		r = &state->rectArr[state->rectCount++];
 		r->fixed = false;
 		r->enableFriction = true;
 		r->p.x = pX + (rand(state)-.5f)*50.f;
@@ -69,9 +70,10 @@ internal void makePlayer(
 
 	// --- MAKE JOINTS ---
 	PlayerSegments* seg = pl->segments;
+	assert(state->jointCount + playerJointCount
+		<= ARRAY_COUNT(state->jointArr));
 	pl->joints = (PlayerJoints*)&state->jointArr[state->jointCount];
 	state->jointCount += playerJointCount;
-	assert(ARRAY_SIZE_CHECK(state->joint));
 
 #define MAKE_JOINT(joint, part1, part2, min, max, vOffsetFactor) \
 	{															\

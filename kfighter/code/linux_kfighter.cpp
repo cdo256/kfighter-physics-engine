@@ -71,7 +71,6 @@ internal struct timespec linuxGetModificationTime(char const* filename) {
 	int res = stat(filename, &statbuf);
 	if (res < 0) {
 		linuxErrorMessage("Could not stat %s.", filename);
-		exit(1);
 	}
 	return statbuf.st_mtim;
 }
@@ -461,7 +460,7 @@ main(int argc, char const* const* argv) {
 	struct timespec lastCounter;
 	clock_gettime(CLOCK_MONOTONIC, &lastCounter);
 	u64 lastCycleCount = __rdtsc();
-	u32 timeElapsed = 0.f;
+	f32 timeElapsed = 0.f;
 
 	while (state.running) {
 		memset(newInput, 0, sizeof(GameInput));
@@ -487,7 +486,7 @@ main(int argc, char const* const* argv) {
 			state.loadCounter = 0;
 		}
 		f32 dt = timeElapsed;
-		if (dt > 0.1f) dt = 0.1f; // cap time jump to prevent physics freak-out
+		if (dt > 0.01f) dt = 0.01f; // cap time jump to prevent physics freak-out
 		state.gameCode.updateAndRender(dt, state.randomSeed,
 			&state.gameMemory, newInput,
 			&state.gameBuffer);

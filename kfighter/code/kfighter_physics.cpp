@@ -134,9 +134,9 @@ resolveJointConstraint(
 			//TODO: Prevent integral windup:
 			// https://en.wikipedia.org/wiki/Integral_windup
 			//NOTE: Cranking up ki leads to some kung-fu-like results
-			f32 kp=300.f,ki=10000.f,kd=0;
+			//f32 kp=300.f,ki=10000.f,kd=0;
 			//f32 kp=300000.f,ki=5000.f,kd=1000.f;
-			//f32 kp=70000.f,ki=2000.f,kd=10.f;
+			f32 kp=70000.f,ki=2001.f,kd=100.f;
 			f32 error = j->targetAngle - theta;
 			f32 integral = j->pidIntegralTerm += dt*error;
 

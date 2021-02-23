@@ -68,7 +68,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 
 	//NOTE: Force dt for debugging only
 #if KFIGHTER_INTERNAL
-	dt = 0.033f;
+	dt = 0.02f;
 #endif
 
 
@@ -91,9 +91,13 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 
 		makeWalls(state, buffer);
 
-		for (int i = 0; i < 6; i++) {
-			PhysicsRect* r = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->rect);
-			CollisionIsland* ci = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->collisionIsland);
+		for (int i = 0; i < 0; i++) {
+			assert(state->rectCount < ARRAY_COUNT(state->rectArr));
+			PhysicsRect* r = &state->rectArr[state->rectCount++];
+			assert(state->collisionIslandCount
+				< ARRAY_COUNT(state->collisionIslandArr));
+			CollisionIsland* ci = &state->collisionIslandArr[
+				state->collisionIslandCount++];
 			ci->enable = true;
 			ci->rectCount = 1;
 			ci->rects = r;
@@ -114,7 +118,6 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 		makePlayer(state, &state->playerArr[0], buffer);
 		//makePlayer(state, &state->playerArr[1], buffer);
 		makePlayerPoses(state);
-		assert(ARRAY_SIZE_CHECK(state->player));
 
 		state->isInitialised = true;
 	}
@@ -261,12 +264,11 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 							CollisionManifold collisionManifold;
 							if (doPolygonsIntersect(
 									&p1,&p2,&collisionManifold)) {
-								if (ARRAY_APPEND_CHECK(state->collisionManifold)) {
+								if (state->collisionManifoldCount < ARRAY_COUNT(state->collisionManifoldArr)) {
 									collisionManifold.r1 = r1;
 									collisionManifold.r2 = r2;
-									APPEND_TO_ARRAY_WITHOUT_CHECK(
-										state->collisionManifold,
-										collisionManifold)
+									state->collisionManifoldArr[state->collisionManifoldCount++] =
+										collisionManifold;
 								} else {
 									//NOTE: This should only occur on
 									//heavy load frames. Nothing bad

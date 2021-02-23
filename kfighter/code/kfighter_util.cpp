@@ -28,13 +28,19 @@ internal bool wasTapped(GameButtonState button) {
 }
 
 internal void makeWalls(GameState* state, GameOffscreenBuffer* buffer) {
-	CollisionIsland* island = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->collisionIsland);
+	assert(state->collisionIslandCount
+		< ARRAY_COUNT(state->collisionIslandArr));
+	CollisionIsland* island = &state->collisionIslandArr[
+		state->collisionIslandCount++];
 	island->rectCount = 4;
 	island->enable = true;
+	assert(state->rectCount + island->rectCount <
+		ARRAY_COUNT(state->rectArr));
 	island->rects = &state->rectArr[state->rectCount];
 	PhysicsRect* r;
 	for (int i = 0; i < 4; i++) {
-		r = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->rect);
+		assert(state->rectCount < ARRAY_COUNT(state->rectArr));
+		r = &state->rectArr[state->rectCount++];
 		r->fixed = true;
 		r->enableFriction = true;
 		r->v = V2(0,0);

@@ -149,47 +149,22 @@ struct PhysicsVariables {
 	v2 globalAccel;
 };
 
-#define DECLARE_ARRAY(type,name,max)  \
-	u32 name##Count;	      \
-	type name##Arr[max];
-
-#define ARRAY_APPEND_CHECK(arr)					  \
-	((arr##Count)<ARRAY_COUNT(arr##Arr)-1)
-
-#define ARRAY_SIZE_CHECK(arr)						\
-	((arr##Count)<ARRAY_COUNT(arr##Arr))
-
-#define APPEND_TO_ARRAY_WITH_FAIL(arr,val) {		 \
-		assert((arr##Count)<ARRAY_COUNT(arr##Arr)-1);  \
-		(arr##Arr)[(arr##Count)++] = (val);	  \
-	}
-
-#define APPEND_TO_ARRAY_WITH_CHECK(arr,val)		  \
-	if ((arr##Count)<ARRAY_COUNT(arr##Arr)-1)		  \
-		(arr##Arr)[(arr##Count)++] = (val);
-
-#define APPEND_TO_ARRAY_WITHOUT_CHECK(arr,val)	   \
-	(arr##Arr)[(arr##Count)++] = (val);
-
-#define GET_NEXT_ARRAY_ELEM_WITH_FAIL(arr) (		 \
-		assert((arr##Count)<ARRAY_COUNT(arr##Arr)-1),  \
-		&(arr##Arr)[(arr##Count)++])
-
-#define GET_NEXT_ARRAY_ELEM_WITH_CHECK(arr) (		\
-		((arr##Count)<ARRAY_COUNT(arr##Arr)-1) ?	   \
-		&(arr##Arr)[(arr##Count)++] : (void*)0)
-
 struct GameState {
 	b32 isInitialised;
 
-	DECLARE_ARRAY(Player, player, 4)
-	DECLARE_ARRAY(PhysicsRect, rect, 100)
-	DECLARE_ARRAY(PhysicsJoint, joint, 50)
-	DECLARE_ARRAY(CollisionIsland, collisionIsland, 20)
-	DECLARE_ARRAY(CollisionManifold, collisionManifold, 200)
-	DECLARE_ARRAY(PlayerPose, pose, PLAYER_POSE_ENUM_COUNT)
+	u32 playerCount;
+	Player playerArr[4];
+	u32 rectCount;
+	PhysicsRect rectArr[100];
+	u32 jointCount;
+	PhysicsJoint jointArr[50];
+	u32 collisionIslandCount;
+	CollisionIsland collisionIslandArr[20];
+	u32 collisionManifoldCount;
+	CollisionManifold collisionManifoldArr[200];
+	u32 poseCount;
+	PlayerPose poseArr[PLAYER_POSE_ENUM_COUNT];
 
-	//TODO: Is this random enough?
 	u32 randomSeed;
 
 	f32 metersToPixels;

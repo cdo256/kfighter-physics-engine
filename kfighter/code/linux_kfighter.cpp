@@ -11,6 +11,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/XKBlib.h>
 
 #include "kfighter.h"
 #include "kfighter_global.h"
@@ -19,14 +20,19 @@
 struct LinuxGameCode {
 	void* soHandle;
 	game_update_and_render* updateAndRender;
+	struct timespec lastWriteTime;
 	b32 isValid;
 };
 
+#define LINUX_INPUT_BUFFER_MAX_SIZE 900 // 30 seconds at 30FPS
+
 struct LinuxState {
+	u32 randomSeed;
 	GC gc;
 	int winWidth, winHeight;
 	XImage* backBuffer;
 	bool running;
+	bool paused;
 	Window win;
 	Atom wmDeleteWindow;
 	Display* display;
@@ -34,9 +40,21 @@ struct LinuxState {
 	bool key[256];
 	LinuxGameCode gameCode;
 	s32 loadCounter;
+
 	GameMemory gameMemory;
-	GameInput gameInput;
 	GameOffscreenBuffer gameBuffer;
+
+	void* gameMemoryTempBlock;
+	void* gameMemoryBlock;
+	u64 gameMemorySize; 
+
+	bool recordingInput;
+	bool playingInput;
+	int inputStartPosition;
+	int inputEndPosition;
+	int inputPlaybackPosition;
+	int inputBufferSize;
+	GameInput inputBuffer[LINUX_INPUT_BUFFER_MAX_SIZE];
 };
 
 internal void
@@ -46,6 +64,16 @@ linuxErrorMessage(char const* str, ...) {
 	vfprintf(stderr, str, vl);
 	fprintf(stderr, "\n");
 	va_end(vl);
+}
+
+internal struct timespec linuxGetModificationTime(char const* filename) {
+	struct stat statbuf;
+	int res = stat(filename, &statbuf);
+	if (res < 0) {
+		linuxErrorMessage("Could not stat %s.", filename);
+		exit(1);
+	}
+	return statbuf.st_mtim;
 }
 
 internal void*
@@ -128,6 +156,7 @@ linuxLoadGameCode() {
 	if (unlink("kfighter_temp.so") < 0) {
 		linuxErrorMessage("Could not delete old kfighter_temp.so.");
 	}
+	ret.lastWriteTime = linuxGetModificationTime("kfighter.so");
 	if (!linuxCopyFile("kfighter.so", "kfighter_temp.so")) {
 		linuxErrorMessage("Could not move file kfighter.so to kfighter_temp.so.");
 		exit(1);
@@ -195,31 +224,83 @@ linuxResizeBackBuffer(modified LinuxState* state, int width, int height) {
 	linuxUpdateGameBuffer(&state->gameBuffer, state->backBuffer);
 }
 
-internal bool
-linuxInitGameMemory(out GameMemory* memory) {
-	memory->permanentStorageSize = MEGABYTES(4);
-	memory->transientStorageSize = MEGABYTES(16);
-	memory->permanentStorage = calloc(1, memory->permanentStorageSize);
-	memory->transientStorage = calloc(1, memory->transientStorageSize);
-	if (!memory->permanentStorage || !memory->transientStorage) {
-		free(memory->permanentStorage);
-		free(memory->transientStorage);
-		return false;
-	}
-	return true;
+internal void
+linuxBeginRecordingInput(modified LinuxState* state) {
+	state->inputStartPosition = 0;
+	state->inputEndPosition = 0;
+	state->inputBufferSize = 0;
+	state->recordingInput = true;
+	
+	memcpy(state->gameMemoryTempBlock,
+		state->gameMemoryBlock,
+		(size_t)state->gameMemorySize);
 }
 
-internal bool
-linuxInitGameInput(out GameInput* input) {
-	//TODO
-	return false;
+internal void
+linuxEndRecordingInput(modified LinuxState* state) {
+	state->recordingInput = false;
+}
+
+internal void
+linuxBeginInputPlayback(modified LinuxState* state) {
+	state->recordingInput = false;
+	state->inputPlaybackPosition = state->inputStartPosition;
+	state->playingInput = true;
+	memcpy(
+		state->gameMemoryBlock,
+		state->gameMemoryTempBlock,
+		(size_t)state->gameMemorySize);
+}
+
+internal void
+linuxEndInputPlayback(modified LinuxState* state) {
+	state->playingInput = false;
+}
+
+internal void
+linuxRecordInput(modified LinuxState* state, in GameInput* input) {
+	assert(state->recordingInput);
+	state->inputBuffer[state->inputEndPosition] = *input;
+	state->inputEndPosition = (state->inputEndPosition + 1) % LINUX_INPUT_BUFFER_MAX_SIZE;
+	if (state->inputBufferSize < LINUX_INPUT_BUFFER_MAX_SIZE)
+		state->inputBufferSize++;
+	else {
+		state->inputStartPosition = state->inputEndPosition;
+	}
+}
+
+internal void
+linuxPlaybackInput(
+		modified LinuxState* state, out GameInput* input) {
+	assert(state->playingInput);
+	*input = state->inputBuffer[state->inputPlaybackPosition];
+	state->inputPlaybackPosition =
+		(state->inputPlaybackPosition + 1) % LINUX_INPUT_BUFFER_MAX_SIZE;
+	if (state->inputPlaybackPosition == state->inputEndPosition)
+		state->inputPlaybackPosition = state->inputStartPosition;
+}
+
+internal void
+linuxInitGameMemory(modified LinuxState* state, out GameMemory* memory) {
+	memory->permanentStorageSize = MEGABYTES(4);
+	memory->transientStorageSize = MEGABYTES(16);
+	state->gameMemorySize = memory->permanentStorageSize
+		+ memory->transientStorageSize;
+	state->gameMemoryBlock = calloc(1, state->gameMemorySize * 2);
+	if (!state->gameMemoryBlock) {
+		linuxErrorMessage("Could not allocate %llu bytes", (unsigned long long)(state->gameMemorySize * 2));
+		exit(1);
+	}
+	state->gameMemoryTempBlock = (void*)((u8*)state->gameMemoryBlock + state->gameMemorySize);
+	memory->permanentStorage = state->gameMemoryBlock;
+	memory->transientStorage =
+		(void*)((u8*)state->gameMemoryBlock
+		+ memory->permanentStorageSize);
 }
 
 internal bool
 linuxInitState(out LinuxState* state) {
-	if (!linuxInitGameMemory(&state->gameMemory)) {
-		linuxErrorMessage("Could not allocate game memory.");
-	}
+	linuxInitGameMemory(state, &state->gameMemory);
 	char* dir = linuxGetExecutableDirectory();
 	chdir(dir);
 	free(dir);
@@ -278,7 +359,50 @@ linuxRedrawWindow(modified LinuxState* state) {
 }
 
 internal void
-linuxHandleEvent(XEvent ev, modified LinuxState* state) {
+linuxHandleKeyboardEvent(XKeyEvent* e, modified LinuxState* state,
+		modified GameControllerInput* controller) {
+	bool isDown = (e->type == KeyPress);
+	bool wasDown = !isDown;
+	KeySym ksym = XkbKeycodeToKeysym(state->display, e->keycode, 0, 0);
+	GameButtonState* button = NULL;
+	switch (ksym) {
+	case XK_Up: button = &controller->up; break;
+	case XK_Down: button = &controller->down; break;
+	case XK_Left: button = &controller->left; break;
+	case XK_Right: button = &controller->right; break;
+	case XK_Escape: if (wasDown) state->running = false; break;
+	case XK_P: if (wasDown) state->paused = !state->paused; break;
+	case XK_L: if (wasDown) {
+		assert(!state->recordingInput || !state->playingInput);
+		if (state->recordingInput) {
+			linuxEndRecordingInput(state);
+			linuxBeginInputPlayback(state);
+			fprintf(stdout, "Ending input recording, beginning playback.\n");
+		} else if (state->playingInput) {
+			linuxEndInputPlayback(state);
+			fprintf(stdout, "Ending input playback.\n");
+		} else {
+			linuxBeginRecordingInput(state);
+			fprintf(stdout, "Beginning input recording.\n");
+		}
+	} break;
+	case XK_bracketleft:
+	case XK_bracketright:
+	case XK_R: if (wasDown) {
+		if (ksym == XK_bracketleft) state->randomSeed--;
+		else if (ksym == XK_bracketright) state->randomSeed++;
+		fprintf(stdout, "Seed: %d\n", state->randomSeed);
+		memset(state->gameMemoryBlock, 0, state->gameMemorySize);
+	} break;
+	}
+	if (button) {
+		button->endedDown = isDown;
+		button->halfTransitionCount++;
+	}
+}
+
+internal void
+linuxHandleEvent(XEvent ev, modified LinuxState* state, out GameInput* input) {
 	switch (ev.type) {
 	case NoExpose: {
 		//NOOP
@@ -297,16 +421,18 @@ linuxHandleEvent(XEvent ev, modified LinuxState* state) {
 		}
 	} break;
 	case FocusOut: {
-		for (int i = 0; i < 256; i++) {
-			state->key[ev.xkey.keycode] = false;
+		for (u32 i = 0; i < arrayCount(input->controllers); i++) {
+			for (u32 j = 0; j < arrayCount(input->controllers[0].buttons); j++) {
+				if (input->controllers[i].buttons[j].endedDown) {
+					input->controllers[i].buttons[j].endedDown = false;
+					input->controllers[i].buttons[j].halfTransitionCount++;
+				}
+			}
 		}
 	} break;
 	case KeyPress: case KeyRelease: {
-		XKeyEvent e = ev.xkey;
-		bool isDown = (ev.type == KeyPress);
-		if (e.keycode < 256) {
-			state->key[e.keycode] = isDown;
-		}
+		linuxHandleKeyboardEvent(&ev.xkey, state,
+			&input->controllers[0]);
 	} break;
 	default: {
 		printf("Unrecognised message: %i\n", ev.type);
@@ -315,7 +441,7 @@ linuxHandleEvent(XEvent ev, modified LinuxState* state) {
 }
 
 internal f32
-ComputeClockInterval(struct timespec start, struct timespec end) {
+linuxComputeClockInterval(struct timespec start, struct timespec end) {
 	return (f32)(end.tv_sec - start.tv_sec) + ((f32)(end.tv_nsec - start.tv_nsec) * 1e-9f);
 }
 
@@ -327,35 +453,54 @@ main(int argc, char const* const* argv) {
 		return 1;
 	}
 
+	GameInput inputArray[3] = {0};
+	GameInput* newInput = &inputArray[0];
+	GameInput* oldInput = &inputArray[1];
+	
 	struct timespec lastCounter;
 	clock_gettime(CLOCK_MONOTONIC, &lastCounter);
 	u64 lastCycleCount = __rdtsc();
+	u32 timeElapsed = 0.f;
 
 	while (state.running) {
+		memset(newInput, 0, sizeof(GameInput));
+		for (u32 i = 0; i < arrayCount(newInput->controllers); i++) {
+			for (u32 j = 0; j < arrayCount(newInput->controllers[0].buttons); j++) {
+				newInput->controllers[i].buttons[j].endedDown =
+					oldInput->controllers[i].buttons[j].endedDown;
+			}
+		}
 		while (XPending(state.display)) {
 			XEvent e;
 			XNextEvent(state.display, &e);
-			linuxHandleEvent(e, &state);
+			linuxHandleEvent(e, &state, newInput);
 		}
-		if (state.loadCounter++ > 120) {
+		if (state.recordingInput) linuxRecordInput(&state, newInput);
+		if (state.playingInput) linuxPlaybackInput(&state, newInput);
+		struct timespec soModified =
+			linuxGetModificationTime("kfighter.so");
+		if (soModified.tv_sec != state.gameCode.lastWriteTime.tv_sec ||
+				soModified.tv_nsec != state.gameCode.lastWriteTime.tv_nsec) {
 			linuxUnloadGameCode(&state.gameCode);
 			state.gameCode = linuxLoadGameCode();
 			state.loadCounter = 0;
 		}
-		int speed = 1;
-		if (state.key[111]) state.yOffset -= speed;
-		if (state.key[116]) state.yOffset += speed;
-		if (state.key[113]) state.xOffset -= speed;
-		if (state.key[114]) state.xOffset += speed;
-		state.gameCode.updateAndRender(0.f, 4,
-			&state.gameMemory, &state.gameInput,
+		f32 dt = timeElapsed;
+		if (dt > 0.1f) dt = 0.1f; // cap time jump to prevent physics freak-out
+		state.gameCode.updateAndRender(dt, state.randomSeed,
+			&state.gameMemory, newInput,
 			&state.gameBuffer);
 		linuxRedrawWindow(&state);
+
+		GameInput* tempInput = newInput;
+		newInput = oldInput;
+		oldInput = tempInput;
 
 		struct timespec endCounter;
 		clock_gettime(CLOCK_MONOTONIC, &endCounter);
 		u64 endCycleCount = __rdtsc();
-		f32 timeElapsed = ComputeClockInterval(lastCounter, endCounter);
+		timeElapsed = linuxComputeClockInterval(
+			lastCounter, endCounter);
 		printf("%3.2fms/f, %3.1ff/s, %2.2fMc/f\n",
 			timeElapsed*1e3f, 1.f/timeElapsed,
 			(endCycleCount - lastCycleCount) * 1e-6f);

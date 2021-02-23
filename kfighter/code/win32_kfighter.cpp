@@ -527,7 +527,6 @@ int CALLBACK WinMain(
 	LPVOID baseAddress = 0;
 #endif
 
-	//TODO: Does putting this struct on the heap make things slower?
 	Win32State* state = (Win32State*)VirtualAlloc(
 		0,
 		sizeof(Win32State),
@@ -588,7 +587,7 @@ int CALLBACK WinMain(
 		HWND hwnd = CreateWindowEx(
 			0,
 			windowClass.lpszClassName,
-			"K-Fighter",
+			"KFighter",
 			WS_OVERLAPPEDWINDOW|WS_VISIBLE,
 			CW_USEDEFAULT,
 			CW_USEDEFAULT,

@@ -623,10 +623,10 @@ int CALLBACK WinMain(
 				GameControllerInput zeroController = {};
 				*keyboardController = zeroController;
 
-				for (u32 i = 0; i < arrayCount(newInput->controllers); i++) {
+				for (u32 i = 0; i < ARRAY_COUNT(newInput->controllers); i++) {
 					GameControllerInput* oldController = &oldInput->controllers[i];
 					GameControllerInput* newController = &newInput->controllers[i];
-					for (u32 j = 0; j < arrayCount(newController->buttons); j++) {
+					for (u32 j = 0; j < ARRAY_COUNT(newController->buttons); j++) {
 						GameButtonState* oldState = &oldController->buttons[j];
 						GameButtonState* newState = &newController->buttons[j];
 						newState->endedDown = oldState->endedDown;
@@ -638,8 +638,8 @@ int CALLBACK WinMain(
 				if (xinputLoaded) {
 					//TODO: Should we poll this more frequently?
 					u32 maxControllerCount = XUSER_MAX_COUNT;
-					if (maxControllerCount > arrayCount(newInput->controllers))
-						maxControllerCount = arrayCount(newInput->controllers);
+					if (maxControllerCount > ARRAY_COUNT(newInput->controllers))
+						maxControllerCount = ARRAY_COUNT(newInput->controllers);
 
 					for (u32 controllerIndex = 0; controllerIndex < maxControllerCount; controllerIndex++) {
 						u32 ourControllerIndex = controllerIndex + 1; // Since keyboard is always controller1 in our system

@@ -130,7 +130,7 @@ extern "C" GAME_UPDATE_AND_RENDER(gameUpdateAndRender);
 
 //NOTE: Platform independent declarations
 
-#define arrayCount(array) (sizeof(array) / sizeof((array)[0]))
+#define ARRAY_COUNT(array) (sizeof(array) / sizeof((array)[0]))
 
 struct PhysicsVariables {
 	bool enableJoints;
@@ -149,36 +149,34 @@ struct PhysicsVariables {
 	v2 globalAccel;
 };
 
-#define DECLARE_ARRAY(type,name,max)				 \
-	static_storage const int					 \
-	name##MaxCount = (max);					  \
-	int name##Count;							 \
+#define DECLARE_ARRAY(type,name,max)  \
+	u32 name##Count;	      \
 	type name##Arr[max];
 
 #define ARRAY_APPEND_CHECK(arr)					  \
-	((arr##Count)<(arr##MaxCount)-1)
+	((arr##Count)<ARRAY_COUNT(arr##Arr)-1)
 
 #define ARRAY_SIZE_CHECK(arr)						\
-	((arr##Count)<(arr##MaxCount))
+	((arr##Count)<ARRAY_COUNT(arr##Arr))
 
 #define APPEND_TO_ARRAY_WITH_FAIL(arr,val) {		 \
-		assert((arr##Count)<(arr##MaxCount)-1);  \
+		assert((arr##Count)<ARRAY_COUNT(arr##Arr)-1);  \
 		(arr##Arr)[(arr##Count)++] = (val);	  \
 	}
 
 #define APPEND_TO_ARRAY_WITH_CHECK(arr,val)		  \
-	if ((arr##Count)<(arr##MaxCount)-1)		  \
+	if ((arr##Count)<ARRAY_COUNT(arr##Arr)-1)		  \
 		(arr##Arr)[(arr##Count)++] = (val);
 
 #define APPEND_TO_ARRAY_WITHOUT_CHECK(arr,val)	   \
 	(arr##Arr)[(arr##Count)++] = (val);
 
 #define GET_NEXT_ARRAY_ELEM_WITH_FAIL(arr) (		 \
-		assert((arr##Count)<(arr##MaxCount)-1),  \
+		assert((arr##Count)<ARRAY_COUNT(arr##Arr)-1),  \
 		&(arr##Arr)[(arr##Count)++])
 
 #define GET_NEXT_ARRAY_ELEM_WITH_CHECK(arr) (		\
-		((arr##Count)<(arr##MaxCount)-1) ?	   \
+		((arr##Count)<ARRAY_COUNT(arr##Arr)-1) ?	   \
 		&(arr##Arr)[(arr##Count)++] : (void*)0)
 
 struct GameState {

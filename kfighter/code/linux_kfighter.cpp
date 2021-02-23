@@ -46,7 +46,7 @@ struct LinuxState {
 
 	void* gameMemoryTempBlock;
 	void* gameMemoryBlock;
-	u64 gameMemorySize; 
+	u64 gameMemorySize;
 
 	bool recordingInput;
 	bool playingInput;
@@ -81,7 +81,6 @@ linuxGetSymbolFromLibrary(void* handle, char const* name) {
 	void* symbol = dlsym(handle, name);
 	if (!symbol) {
 		linuxErrorMessage("Could not find symbol %s in library: %s", name, dlerror());
-		exit(1);
 	}
 	return symbol;
 }
@@ -95,7 +94,6 @@ linuxLoadLibrary(char const* filename) {
 	if (!handle)
 	{
 		linuxErrorMessage("Could not open library %s: %s", filename, dlerror());
-		exit(1);
 	}
 	return handle;
 }
@@ -167,8 +165,11 @@ linuxLoadGameCode() {
 		exit(1);
 	}
 	ret.soHandle = linuxLoadLibrary("kfighter_temp.so");
-	ret.updateAndRender = (game_update_and_render*)
-		linuxGetSymbolFromLibrary(ret.soHandle, "gameUpdateAndRender");
+	if (ret.soHandle) {
+		ret.updateAndRender = (game_update_and_render*)
+			linuxGetSymbolFromLibrary(ret.soHandle,
+			"gameUpdateAndRender");
+	}
 	ret.isValid = (ret.updateAndRender != NULL);
 	if (!ret.isValid) {
 		ret.updateAndRender = gameUpdateAndRenderStub;
@@ -230,7 +231,7 @@ linuxBeginRecordingInput(modified LinuxState* state) {
 	state->inputEndPosition = 0;
 	state->inputBufferSize = 0;
 	state->recordingInput = true;
-	
+
 	memcpy(state->gameMemoryTempBlock,
 		state->gameMemoryBlock,
 		(size_t)state->gameMemorySize);
@@ -421,8 +422,8 @@ linuxHandleEvent(XEvent ev, modified LinuxState* state, out GameInput* input) {
 		}
 	} break;
 	case FocusOut: {
-		for (u32 i = 0; i < arrayCount(input->controllers); i++) {
-			for (u32 j = 0; j < arrayCount(input->controllers[0].buttons); j++) {
+		for (u32 i = 0; i < ARRAY_COUNT(input->controllers); i++) {
+			for (u32 j = 0; j < ARRAY_COUNT(input->controllers[0].buttons); j++) {
 				if (input->controllers[i].buttons[j].endedDown) {
 					input->controllers[i].buttons[j].endedDown = false;
 					input->controllers[i].buttons[j].halfTransitionCount++;
@@ -456,7 +457,7 @@ main(int argc, char const* const* argv) {
 	GameInput inputArray[3] = {0};
 	GameInput* newInput = &inputArray[0];
 	GameInput* oldInput = &inputArray[1];
-	
+
 	struct timespec lastCounter;
 	clock_gettime(CLOCK_MONOTONIC, &lastCounter);
 	u64 lastCycleCount = __rdtsc();
@@ -464,8 +465,8 @@ main(int argc, char const* const* argv) {
 
 	while (state.running) {
 		memset(newInput, 0, sizeof(GameInput));
-		for (u32 i = 0; i < arrayCount(newInput->controllers); i++) {
-			for (u32 j = 0; j < arrayCount(newInput->controllers[0].buttons); j++) {
+		for (u32 i = 0; i < ARRAY_COUNT(newInput->controllers); i++) {
+			for (u32 j = 0; j < ARRAY_COUNT(newInput->controllers[0].buttons); j++) {
 				newInput->controllers[i].buttons[j].endedDown =
 					oldInput->controllers[i].buttons[j].endedDown;
 			}

@@ -110,9 +110,9 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 			computeMassAndMomentOfInertia(r, 0.01f);
 		}
 
-		state->playerCount = 2;
+		state->playerCount = 1;
 		makePlayer(state, &state->playerArr[0], buffer);
-		makePlayer(state, &state->playerArr[1], buffer);
+		//makePlayer(state, &state->playerArr[1], buffer);
 		makePlayerPoses(state);
 		assert(ARRAY_SIZE_CHECK(state->player));
 
@@ -125,11 +125,11 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 	GameControllerInput* controller = &input->controllers[0];
 
 	if (wasTapped(controller->aButton)) {
-		for (int i = 0; i < state->playerCount; i++) {
+		for (u32 i = 0; i < state->playerCount; i++) {
 			Player* player = &state->playerArr[i];
 			player->currentPose++;
 			if (player->currentPose >= state->poseCount)
-				player->currentPose = -1;
+				player->currentPose = ~0;
 		}
 	}
 
@@ -148,13 +148,13 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 
 	// ---- UPDATE AND RENDER ----
 
-	for (int i = 0; i < state->rectCount; i++) {
+	for (u32 i = 0; i < state->rectCount; i++) {
 		PhysicsRect* r = &state->rectArr[i];
 		r->accel = (r->v - r->lastV) / dt;
 		r->lastV = r->v;
 	}
 
-	for (int j = 0; j < state->playerCount; j++) {
+	for (u32 j = 0; j < state->playerCount; j++) {
 		for (int i = 0; i < 10; i++) {
 			state->playerArr[j].joints->joints[i].targetAngVel
 				= state->physicsVariables.motorTargetAngVel;
@@ -171,11 +171,11 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 #if 1 //NOTE: Test render so we can see debug overlays
 	//TODO: This is really janky, surely there's a better way.
 	// --- RENDER ---
-	for (int i = 0; i < state->rectCount; i++) {
+	for (u32 i = 0; i < state->rectCount; i++) {
 		PhysicsRect* r = &state->rectArr[i];
 		renderRectangle(buffer, r, r->colour);
 	}
-	for (int i = 0; i < state->playerCount; i++) { // Render player to get rects in correct order
+	for (u32 i = 0; i < state->playerCount; i++) { // Render player to get rects in correct order
 		PhysicsRect* r;
 		PlayerSegments* segs = state->playerArr[i].segments;
 
@@ -206,7 +206,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 	}
 #endif
 
-	for (int i = 0; i < state->playerCount; i++)
+	for (u32 i = 0; i < state->playerCount; i++)
 		updatePlayer(&state->playerArr[i], state->poseArr, dt);
 
 	// --- SIMULATE ---
@@ -220,7 +220,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 	f32 h = dt/iterCount;
 	for (int iter = 0; iter < iterCount; iter++) {
 		// -- UPDATE POSTION --
-		for (int i = 0; i < state->rectCount; i++) {
+		for (u32 i = 0; i < state->rectCount; i++) {
 			PhysicsRect* r = &state->rectArr[i];
 
 			if (r->fixed) {
@@ -245,10 +245,10 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 			//TODO: Is this too slow? Is there a better way to do this
 			//where we only consider objects that are close to
 			//colliding?
-			for (int i1 = 0; i1 < state->collisionIslandCount; i1++) {
+			for (u32 i1 = 0; i1 < state->collisionIslandCount; i1++) {
 				CollisionIsland* ci1 = &state->collisionIslandArr[i1];
 				if (!ci1->enable) continue;
-				for (int i2 = 0; i2 < i1; i2++) {
+				for (u32 i2 = 0; i2 < i1; i2++) {
 					CollisionIsland* ci2 = &state->collisionIslandArr[i2];
 					if (!ci2->enable) continue;
 					for (int ri1 = 0; ri1 < ci1->rectCount; ri1++) {
@@ -282,7 +282,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 				}
 			}
 
-			for (int i = 0; i < state->collisionManifoldCount; i++) {
+			for (u32 i = 0; i < state->collisionManifoldCount; i++) {
 				resolveCollision(
 					&state->physicsVariables,
 					h,
@@ -291,7 +291,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 		}
 
 		// -- RESOLVE JOINT CONSTRAINTS --
-		for (int i = 0; i < state->jointCount; i++) {
+		for (u32 i = 0; i < state->jointCount; i++) {
 			resolveJointConstraint(
 				&state->physicsVariables,
 				&state->jointArr[i],

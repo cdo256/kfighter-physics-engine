@@ -6,7 +6,8 @@ internal void makePlayer(
 	out Player* pl,
 	in GameOffscreenBuffer* buffer) {
 
-	CollisionIsland* ci = GET_NEXT_ARRAY_ELEM_WITH_FAIL(state->collisionIsland);
+	CollisionIsland* ci = &state->collisionIslandArr[
+		state->collisionIslandCount++];
 	ci->enable = true;
 	ci->rectCount = playerSegmentCount;
 	ci->rects = &state->rectArr[state->rectCount];

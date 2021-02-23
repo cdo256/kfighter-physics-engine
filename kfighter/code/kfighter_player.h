@@ -86,7 +86,7 @@ struct Player {
 
 	//TODO: The following is all legacy stuff and needs to go (or be
 	//completely redone) at some point
-	s32 currentPose;
+	u32 currentPose;
 	//PlayerPose *prevPose, *nextPose;
 	f32 strideWheelRadius;
 	f32 strideWheelAngle;

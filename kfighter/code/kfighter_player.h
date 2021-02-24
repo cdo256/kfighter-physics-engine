@@ -4,19 +4,19 @@ global const int playerSegmentCount = 11;
 global const int playerJointCount = 10;
 
 union PlayerSegments {
-	PhysicsRect segments[playerSegmentCount];
+	PhysicsObj segments[playerSegmentCount];
 	struct {
-		PhysicsRect head;
-		PhysicsRect chest;
-		PhysicsRect abdomen;
-		PhysicsRect lBicep;
-		PhysicsRect lForearm;
-		PhysicsRect rBicep;
-		PhysicsRect rForearm;
-		PhysicsRect lThigh;
-		PhysicsRect lShin;
-		PhysicsRect rThigh;
-		PhysicsRect rShin;
+		PhysicsObj head;
+		PhysicsObj chest;
+		PhysicsObj abdomen;
+		PhysicsObj lBicep;
+		PhysicsObj lForearm;
+		PhysicsObj rBicep;
+		PhysicsObj rForearm;
+		PhysicsObj lThigh;
+		PhysicsObj lShin;
+		PhysicsObj rThigh;
+		PhysicsObj rShin;
 	};
 };
 

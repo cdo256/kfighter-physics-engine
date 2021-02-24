@@ -78,7 +78,7 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 		state->randomSeed = seed;
 
 		state->playerCount = 0;
-		state->rectCount = 0;
+		state->objCount = 0;
 		state->jointCount = 0;
 		state->collisionIslandCount = 0;
 		state->collisionManifoldCount = 0;
@@ -92,15 +92,15 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 		makeWalls(state, buffer);
 
 		for (int i = 0; i < 0; i++) {
-			assert(state->rectCount < ARRAY_COUNT(state->rectArr));
-			PhysicsRect* r = &state->rectArr[state->rectCount++];
+			assert(state->objCount < ARRAY_COUNT(state->objArr));
+			PhysicsObj* r = &state->objArr[state->objCount++];
 			assert(state->collisionIslandCount
 				< ARRAY_COUNT(state->collisionIslandArr));
 			CollisionIsland* ci = &state->collisionIslandArr[
 				state->collisionIslandCount++];
 			ci->enable = true;
-			ci->rectCount = 1;
-			ci->rects = r;
+			ci->objCount = 1;
+			ci->objs = r;
 			r->w = r->h = 100;
 			r->p = V2(buffer->width/4.f + 10*rand(state),
 				buffer->height - i*r->h - r->h/2);
@@ -151,8 +151,8 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 
 	// ---- UPDATE AND RENDER ----
 
-	for (u32 i = 0; i < state->rectCount; i++) {
-		PhysicsRect* r = &state->rectArr[i];
+	for (u32 i = 0; i < state->objCount; i++) {
+		PhysicsObj* r = &state->objArr[i];
 		r->accel = (r->v - r->lastV) / dt;
 		r->lastV = r->v;
 	}
@@ -174,38 +174,38 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 #if 1 //NOTE: Test render so we can see debug overlays
 	//TODO: This is really janky, surely there's a better way.
 	// --- RENDER ---
-	for (u32 i = 0; i < state->rectCount; i++) {
-		PhysicsRect* r = &state->rectArr[i];
-		renderRectangle(buffer, r, r->colour);
+	for (u32 i = 0; i < state->objCount; i++) {
+		PhysicsObj* r = &state->objArr[i];
+		renderObject(buffer, r, r->colour);
 	}
-	for (u32 i = 0; i < state->playerCount; i++) { // Render player to get rects in correct order
-		PhysicsRect* r;
+	for (u32 i = 0; i < state->playerCount; i++) { // Render player to get objs in correct order
+		PhysicsObj* r;
 		PlayerSegments* segs = state->playerArr[i].segments;
 
 		r = &segs->lShin;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 		r = &segs->lThigh;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 		r = &segs->lBicep;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 		r = &segs->lForearm;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 
 		r = &segs->head;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 		r = &segs->chest;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 		r = &segs->abdomen;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 
 		r = &segs->rShin;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 		r = &segs->rThigh;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 		r = &segs->rBicep;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 		r = &segs->rForearm;
-		renderRectangle(buffer, r, r->colour);
+		renderObject(buffer, r, r->colour);
 	}
 #endif
 
@@ -223,8 +223,8 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 	f32 h = dt/iterCount;
 	for (int iter = 0; iter < iterCount; iter++) {
 		// -- UPDATE POSTION --
-		for (u32 i = 0; i < state->rectCount; i++) {
-			PhysicsRect* r = &state->rectArr[i];
+		for (u32 i = 0; i < state->objCount; i++) {
+			PhysicsObj* r = &state->objArr[i];
 
 			if (r->fixed) {
 				r->v = V2(0,0);
@@ -254,16 +254,16 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 				for (u32 i2 = 0; i2 < i1; i2++) {
 					CollisionIsland* ci2 = &state->collisionIslandArr[i2];
 					if (!ci2->enable) continue;
-					for (int ri1 = 0; ri1 < ci1->rectCount; ri1++) {
-						PhysicsRect* r1 = &ci1->rects[ri1];
-						Polygon p1; computeRectVertices(r1,&p1);
-						for (int ri2 = 0; ri2 < ci2->rectCount; ri2++) {
-							PhysicsRect* r2 = &ci2->rects[ri2];
+					for (int ri1 = 0; ri1 < ci1->objCount; ri1++) {
+						PhysicsObj* r1 = &ci1->objs[ri1];
+						Polygon p1; computeRectVertices(r1, &p1);
+						for (int ri2 = 0; ri2 < ci2->objCount; ri2++) {
+							PhysicsObj* r2 = &ci2->objs[ri2];
 							Polygon p2; computeRectVertices(r2, &p2);
 							if (r1->fixed && r2->fixed) continue;
 							CollisionManifold collisionManifold;
-							if (doPolygonsIntersect(
-									&p1,&p2,&collisionManifold)) {
+							if (doPolygonsIntersect(&p1, &p2,
+									&collisionManifold)) {
 								if (state->collisionManifoldCount < ARRAY_COUNT(state->collisionManifoldArr)) {
 									collisionManifold.r1 = r1;
 									collisionManifold.r2 = r2;
@@ -303,9 +303,9 @@ GAME_UPDATE_AND_RENDER(gameUpdateAndRender) {
 
 #if 0 //NOTE: actual render position, just need to move this for a test
 	// --- RENDER ---
-	for (int i = 0; i < state->rectCount; i++) {
-		PhysicsRect* r = &state->rectArr[i];
-		renderRectangle(buffer, r, r->colour);
+	for (int i = 0; i < state->objCount; i++) {
+		PhysicsObj* r = &state->objArr[i];
+		renderObject(buffer, r, r->colour);
 	}
 #endif
 }

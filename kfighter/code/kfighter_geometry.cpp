@@ -2,7 +2,7 @@
 #include "kfighter_physics.h"
 
 //NOTE: Computes vertices anticlockwise
-internal void computeRectVertices(in PhysicsRect* r, out Polygon* res) {
+internal void computeRectVertices(in PhysicsObj* r, out Polygon* res) {
 	res->count = 4;
 	res->center = r->p;
 	assert(res->count <= maxVerticesInPolygon);

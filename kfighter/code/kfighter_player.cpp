@@ -9,17 +9,17 @@ internal void makePlayer(
 	CollisionIsland* ci = &state->collisionIslandArr[
 		state->collisionIslandCount++];
 	ci->enable = true;
-	ci->rectCount = playerSegmentCount;
-	ci->rects = &state->rectArr[state->rectCount];
+	ci->objCount = playerSegmentCount;
+	ci->objs = &state->objArr[state->objCount];
 
-	pl->segments = (PlayerSegments*)ci->rects;
-	PhysicsRect* r;
+	pl->segments = (PlayerSegments*)ci->objs;
+	PhysicsObj* r;
 	f32 margin = 150;
 	f32 pX = rand(state)*(buffer->width-2*margin) + margin;
 	f32 pY = rand(state)*(buffer->height-2*margin) + margin;
-	for (int i = 0; i < ci->rectCount; i++) {
-		assert(state->rectCount < ARRAY_COUNT(state->rectArr));
-		r = &state->rectArr[state->rectCount++];
+	for (int i = 0; i < ci->objCount; i++) {
+		assert(state->objCount < ARRAY_COUNT(state->objArr));
+		r = &state->objArr[state->objCount++];
 		r->fixed = false;
 		r->enableFriction = true;
 		r->p.x = pX + (rand(state)-.5f)*50.f;

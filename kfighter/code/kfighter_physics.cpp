@@ -17,7 +17,7 @@ setPhysicsConstants(
 
 internal inline void
 computeMassAndMomentOfInertia(
-	modified PhysicsRect* r, f32 density) {
+	modified PhysicsObj* r, f32 density) {
 	if (r->fixed) {
 		r->mass = FLT_MAX;
 		r->momentOfInertia = FLT_MAX;
@@ -32,8 +32,8 @@ internal void applyImpulsePair(
 	v2 normal,
 	f32 impulse,
 	v2 pos,
-	modified PhysicsRect* r1,
-	modified PhysicsRect* r2) {
+	modified PhysicsObj* r1,
+	modified PhysicsObj* r2) {
 
 	normal = norm(normal);
 	v2 rel1 = pos - r1->p;
@@ -61,8 +61,8 @@ resolveCollision(
 		v2 pos = manifold->pos[i];
 		v2 normal = manifold->normal;
 		f32 depth = manifold->depth;
-		PhysicsRect* r1 = manifold->r1;
-		PhysicsRect* r2 = manifold->r2;
+		PhysicsObj* r1 = manifold->r1;
+		PhysicsObj* r2 = manifold->r2;
 
 		normal = norm(normal);
 		v2 rel1 = pos - r1->p;
@@ -116,8 +116,8 @@ resolveJointConstraint(
 	f32 dt) {
 
 	if (!j->enable) return;
-	PhysicsRect* r1 = j->r1;
-	PhysicsRect* r2 = j->r2;
+	PhysicsObj* r1 = j->r1;
+	PhysicsObj* r2 = j->r2;
 
 	f32 theta = getJointAngle(j);
 	f32 angVel = r1->angularVel - r2->angularVel;
@@ -136,7 +136,7 @@ resolveJointConstraint(
 			//NOTE: Cranking up ki leads to some kung-fu-like results
 			//f32 kp=300.f,ki=10000.f,kd=0;
 			//f32 kp=300000.f,ki=5000.f,kd=1000.f;
-			f32 kp=70000.f,ki=2001.f,kd=100.f;
+			f32 kp=80000.f,ki=50.f,kd=100.f;
 			f32 error = j->targetAngle - theta;
 			f32 integral = j->pidIntegralTerm += dt*error;
 

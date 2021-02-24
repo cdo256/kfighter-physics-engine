@@ -34,11 +34,11 @@ renderPoint(
 	}
 }
 
-//TODO: Use a RenderRect instead
+//TODO: Use a RenderObj instead
 internal void
-renderRectangle(
+renderObject(
 	modified_descendent GameOffscreenBuffer* buffer,
-	in PhysicsRect* r,
+	in PhysicsObj* r,
 	u32 colour) {
 
 	Polygon pRect;

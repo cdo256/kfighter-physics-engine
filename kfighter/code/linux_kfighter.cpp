@@ -371,8 +371,8 @@ linuxHandleKeyboardEvent(XKeyEvent* e, modified LinuxState* state,
 	case XK_Left: button = &controller->left; break;
 	case XK_Right: button = &controller->right; break;
 	case XK_Escape: if (wasDown) state->running = false; break;
-	case XK_P: if (wasDown) state->paused = !state->paused; break;
-	case XK_L: if (wasDown) {
+	case 'p': if (wasDown) state->paused = !state->paused; break;
+	case 'l': if (wasDown) {
 		assert(!state->recordingInput || !state->playingInput);
 		if (state->recordingInput) {
 			linuxEndRecordingInput(state);
@@ -388,7 +388,7 @@ linuxHandleKeyboardEvent(XKeyEvent* e, modified LinuxState* state,
 	} break;
 	case XK_bracketleft:
 	case XK_bracketright:
-	case XK_R: if (wasDown) {
+	case 'r': if (wasDown) {
 		if (ksym == XK_bracketleft) state->randomSeed--;
 		else if (ksym == XK_bracketright) state->randomSeed++;
 		fprintf(stdout, "Seed: %d\n", state->randomSeed);

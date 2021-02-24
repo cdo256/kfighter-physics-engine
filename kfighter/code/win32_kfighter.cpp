@@ -171,10 +171,10 @@ struct win32WindowDimension {
 internal win32WindowDimension win32GetWindowDimension(in HWND hwnd) {
 	win32WindowDimension ret;
 
-	RECT rect;
-	GetClientRect(hwnd, &rect);
-	ret.width = rect.right - rect.left;
-	ret.height = rect.bottom - rect.top;
+	RECT obj;
+	GetClientObj(hwnd, &obj);
+	ret.width = obj.right - obj.left;
+	ret.height = obj.bottom - obj.top;
 
 	return ret;
 }

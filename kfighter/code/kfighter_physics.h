@@ -8,7 +8,7 @@ struct Polygon {
 	v2 verts[maxVerticesInPolygon];
 };
 
-struct PhysicsRect {
+struct PhysicsObj {
 	f32 w, h;
 	v2 p;
 	v2 v;
@@ -31,12 +31,12 @@ struct CollisionManifold {
 	v2 pos[2];
 	v2 normal;
 	f32 depth;
-	PhysicsRect *r1, *r2;
+	PhysicsObj *r1, *r2;
 };
 
 struct PhysicsJoint {
-	PhysicsRect* r1;
-	PhysicsRect* r2;
+	PhysicsObj* r1;
+	PhysicsObj* r2;
 	v2 relPos1, relPos2;
 	f32 minTheta, maxTheta;
 	f32 maxTorque;
@@ -57,8 +57,8 @@ struct PhysicsJoint {
 struct CollisionIsland {
 	bool enable;
 
-	int rectCount;
-	PhysicsRect* rects;
+	int objCount;
+	PhysicsObj* objs;
 };
 
 #define KFIGHTER_PHYSICS_H

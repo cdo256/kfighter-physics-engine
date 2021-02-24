@@ -154,8 +154,8 @@ struct GameState {
 
 	u32 playerCount;
 	Player playerArr[4];
-	u32 rectCount;
-	PhysicsRect rectArr[100];
+	u32 objCount;
+	PhysicsObj objArr[100];
 	u32 jointCount;
 	PhysicsJoint jointArr[50];
 	u32 collisionIslandCount;

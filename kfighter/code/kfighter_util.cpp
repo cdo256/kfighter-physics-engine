@@ -32,15 +32,15 @@ internal void makeWalls(GameState* state, GameOffscreenBuffer* buffer) {
 		< ARRAY_COUNT(state->collisionIslandArr));
 	CollisionIsland* island = &state->collisionIslandArr[
 		state->collisionIslandCount++];
-	island->rectCount = 4;
+	island->objCount = 4;
 	island->enable = true;
-	assert(state->rectCount + island->rectCount <
-		ARRAY_COUNT(state->rectArr));
-	island->rects = &state->rectArr[state->rectCount];
-	PhysicsRect* r;
+	assert(state->objCount + island->objCount <
+		ARRAY_COUNT(state->objArr));
+	island->objs = &state->objArr[state->objCount];
+	PhysicsObj* r;
 	for (int i = 0; i < 4; i++) {
-		assert(state->rectCount < ARRAY_COUNT(state->rectArr));
-		r = &state->rectArr[state->rectCount++];
+		assert(state->objCount < ARRAY_COUNT(state->objArr));
+		r = &state->objArr[state->objCount++];
 		r->fixed = true;
 		r->enableFriction = true;
 		r->v = V2(0,0);

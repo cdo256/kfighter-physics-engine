@@ -479,7 +479,8 @@ main(int argc, char const* const* argv) {
 		if (state.playingInput) linuxPlaybackInput(&state, newInput);
 		struct timespec soModified =
 			linuxGetModificationTime("kfighter.so");
-		if (soModified.tv_sec != state.gameCode.lastWriteTime.tv_sec ||
+		if (!state.gameCode.isValid ||
+				soModified.tv_sec != state.gameCode.lastWriteTime.tv_sec ||
 				soModified.tv_nsec != state.gameCode.lastWriteTime.tv_nsec) {
 			linuxUnloadGameCode(&state.gameCode);
 			state.gameCode = linuxLoadGameCode();

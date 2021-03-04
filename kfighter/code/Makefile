@@ -7,14 +7,14 @@ OBJDIR=../build
 HEADERS=$(wildcard *.h)
 SOURCE=$(wildcard *.cpp)
 
+all: $(OBJDIR)/kfighter.so $(OBJDIR)/linux_kfighter
+
 $(OBJDIR)/linux_kfighter: linux_kfighter.cpp $(HEADERS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OBJDIR)/linux_kfighter $<
 
 $(OBJDIR)/kfighter.so: kfighter.cpp $(SOURCE) $(HEADERS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -fPIC \
 	-o $(OBJDIR)/kfighter.so $<
-
-all: $(OBJDIR)/kfighter.so $(OBJDIR)/linux_kfighter
 
 clean:
 	rm -f $(OBJDIR)/linux_kfighter $(OBJDIR)/kfighter.so $(OBJDIR)/kfighter_temp.so

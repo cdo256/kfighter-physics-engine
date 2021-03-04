@@ -276,8 +276,10 @@ linuxPlaybackInput(
 	*input = state->inputBuffer[state->inputPlaybackPosition];
 	state->inputPlaybackPosition =
 		(state->inputPlaybackPosition + 1) % LINUX_INPUT_BUFFER_MAX_SIZE;
-	if (state->inputPlaybackPosition == state->inputEndPosition)
-		state->inputPlaybackPosition = state->inputStartPosition;
+	if (state->inputPlaybackPosition == state->inputEndPosition) {
+		linuxEndInputPlayback(state);
+		linuxBeginInputPlayback(state);
+	}
 }
 
 internal void
